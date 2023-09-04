@@ -12,7 +12,6 @@ function Login() {
   const [userDetail, setUserDetail] = useRecoilState(userDetails);
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [isLogged, setIsLogged] = useState(false);
   const [disableButton, setDisableButton] = useState(false);
   const router = useRouter();
 
@@ -44,10 +43,10 @@ function Login() {
         if (res.status === 200) {
           const expireTime = isTokenExpired(response.token);
           localStorage.setItem("authToken", response.token);
-          localStorage.setItem("authTokenExpiration", expireTime.exp);
+          localStorage.setItem("authTokenExpiration", expireTime.exp * 1000);
           setUserDetail({ email: username, password: password });
           // store.dispatch({ type: "UPDATE_USERDETAILS", payload: [res.data] });
-          // router.push("/movie");
+          router.push("/movie");
         }
         if (res.status === 400 && response.message === "Invalid email!") {
           setUsernameError("Invalid email address.");
@@ -70,9 +69,8 @@ function Login() {
     const authTokenExpiration = localStorage.getItem("authTokenExpiration");
     const isLoggedIn =
       authToken !== null && new Date().getTime() < authTokenExpiration;
-    setIsLogged(isLoggedIn);
     if (isLoggedIn === true) {
-      // router.push("/movie");
+      router.push("/movie");
     }
   };
 
@@ -158,6 +156,7 @@ function Login() {
           <div className="mt-5" onClick={() => handleSubmit()}>
             <button
               type="submit"
+              disabled={disableButton === true}
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               Sign in

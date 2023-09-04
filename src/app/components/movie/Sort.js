@@ -2,14 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
-// import {
-//   CheckIcon,
-//   ChevronUpDownIcon,
-//   ChevronRightIcon,
-//   ChevronDownIcon,
-// } from "@heroicons/react/20/solid";
-// import { connect } from "react-redux";
-// import store from "../store/store";
+import {
+  CheckIcon,
+  ChevronUpDownIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/20/solid";
+import { useRecoilState } from "recoil";
+import { sortType } from "@/app/atoms/atoms";
 const people = [
   { name: "Popularity Descending", value: "popularity.desc" },
   { name: "Popularity Ascending", value: "popularity.asc" },
@@ -22,6 +22,7 @@ const people = [
 function Sort() {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState(people[0]);
+  const [sort, setSort] = useRecoilState(sortType);
 
   // Handle open / close
   const handleIsOpen = () => {
@@ -31,7 +32,7 @@ function Sort() {
   // Handle Selected filter
   const handleSelectedChange = (value) => {
     setSelected(value);
-    // store.dispatch({ type: "UPDATE_SORT", payload: value });
+    setSort(value);
   };
 
   return (
@@ -112,8 +113,4 @@ function Sort() {
   );
 }
 
-// const mapStateToProps = (state) => ({
-//   data: state.example,
-// });
-
-export default connect(mapStateToProps)(Sort);
+export default Sort;

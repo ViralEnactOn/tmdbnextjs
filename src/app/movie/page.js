@@ -1,5 +1,8 @@
 import React from "react";
 import Sort from "../components/movie/Sort";
+import WhereToWatch from "../components/movie/WhereToWatch";
+import Filters from "../components/movie/Filters";
+import MainContainer from "../components/movie/MainContainer";
 
 export default function page() {
   return (
@@ -11,13 +14,13 @@ export default function page() {
             <div className="col-span-12  sm:col-span-3 xs:col-span-12">
               <div className="font-semibold text-xl">Popular Movie</div>
               <Sort />
-              {/* <SortComponent />
-              <WheretoWatchComponent />
-              <FiltersComponent /> */}
+              <WhereToWatch />
+              <Filters />
             </div>
             {/* Main Component */}
             <div className="col-span-9 sm:col-span-9 xs:col-span-12">
               {/* <MainContainerComponent /> */}
+              <MainContainer />
             </div>
           </div>
         </div>
