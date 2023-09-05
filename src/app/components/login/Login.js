@@ -45,7 +45,6 @@ function Login() {
           localStorage.setItem("authToken", response.token);
           localStorage.setItem("authTokenExpiration", expireTime.exp * 1000);
           setUserDetail({ email: username, password: password });
-          // store.dispatch({ type: "UPDATE_USERDETAILS", payload: [res.data] });
           router.push("/movie");
         }
         if (res.status === 400 && response.message === "Invalid email!") {

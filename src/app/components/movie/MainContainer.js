@@ -24,10 +24,10 @@ function MainContainer() {
   const [loader, setLoader] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const selectedFilters = useRecoilValue(allDataSelector);
+
   const [updateMultipleAtoms, setUpdateMultipleAtoms] = useRecoilState(
     updateAllDataSelector
   );
-  console.log({ updateMultipleAtoms });
   const parameters = {};
 
   // Fetch URL Params
@@ -36,12 +36,11 @@ function MainContainer() {
     for (const [key, value] of urlParams.entries()) {
       parameters[key] = value;
     }
-    console.log({ parameters });
     return parameters;
   };
 
   // Filter Redux Value
-  const handleFilterToggle = (filterType, filterValue) => {
+  const handleFilterToggle = async (filterType, filterValue) => {
     const newFilters = {
       ...selectedFilters,
       [filterType]: Array.isArray(selectedFilters[filterType])
@@ -51,7 +50,6 @@ function MainContainer() {
         : filterValue,
     };
     setUpdateMultipleAtoms(newFilters);
-    // store.dispatch({ type: "UPDATE_FILTERS", payload: newFilters });
   };
 
   // Set Params
@@ -103,23 +101,22 @@ function MainContainer() {
         sort_by: parameters.sortType,
         watch_region: parameters.countryName,
         with_watch_providers:
-          parameters.WatchProviders === undefined
+          parameters.watchProviders === undefined
             ? ""
-            : parameters.WatchProviders.replace(/,/g, "|"),
+            : parameters.watchProviders.replace(/,/g, "|"),
         "release_date.gte": parameters.releaseDateGte,
         "release_date.lte": parameters.releaseDateLte,
         certification:
-          parameters.certification === undefined
+          parameters.certificationList === undefined
             ? ""
-            : parameters.certifications.replace(/,/g, "|"),
+            : parameters.certificationList.replace(/,/g, "|"),
         "vote_average.gte": parameters.voteAverageGte,
         "vote_average.lte": parameters.voteAverageLte,
         "with_runtime.gte": parameters.runtimeGte,
         "with_runtime.lte": parameters.runtimeLte,
       });
-      endPoint.search = params.toString();
-      if (parameters.genres !== "") {
-        params.with_genres = parameters.genres;
+      if (parameters.genresList !== "") {
+        params.with_genres = parameters.genresList;
       }
       if (parameters.voteCountGte !== "") {
         params["vote_count.lte"] = 0;
@@ -135,8 +132,9 @@ function MainContainer() {
         // setMovie(res.data.results);
         setMovie(response.results);
 
-        // setTimeout(() => {
-        setLazyLoading(false);
+        setTimeout(() => {
+          setLazyLoading(false);
+        }, 5000);
       });
     } catch (error) {
       console.log("Error fetching data:", error);
