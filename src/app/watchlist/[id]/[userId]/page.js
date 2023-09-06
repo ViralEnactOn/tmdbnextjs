@@ -9,7 +9,11 @@ import { Popover, Transition } from "@headlessui/react";
 import { EllipsisHorizontalCircleIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import Heading from "@/app/components/movie/Heading";
+import PieChart from "@/app/components/chart/PieChart";
+import { CategoryScale } from "chart.js";
+import Chart from "chart.js/auto";
 
+Chart.register(CategoryScale);
 function page({ params }) {
   const [lazyLoading, setLazyLoading] = useState(true);
   const [loader, setLoader] = useState(false);
@@ -17,6 +21,7 @@ function page({ params }) {
   const [watchList, setWatchList] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [chartData, setChartData] = useState([]);
 
   const handleImageClick = (index) => {
     if (selectedIndex === index) {
@@ -27,8 +32,54 @@ function page({ params }) {
   };
 
   useEffect(() => {
+    fetchChartDetails();
     fetchDetailWatchList();
   }, []);
+
+  const fetchChartDetails = async () => {
+    const authToken = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(
+        `${config.app.base_url}/chart/genre_wise_rating`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: authToken,
+            watch_list_id: params.id,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setChartData({
+          label: data.genreCountArray.map((item) => item.genre_name),
+          datasets: [
+            {
+              label: "Watch List",
+              data: data.genreCountArray.map((item) => item.genre_count),
+              backgroundColor: [
+                "rgba(75,192,192,1)",
+                "#f0331a",
+                "#f3ba2f",
+                "#ecf0f1",
+                "#2a71d0",
+              ],
+              borderColor: "black",
+              borderWidth: 2,
+            },
+          ],
+        });
+      } else {
+        console.error("Error fetching watch list data");
+      }
+    } catch (error) {
+      console.error("Error fetching watch list data:", error);
+    }
+  };
 
   const fetchDetailWatchList = async () => {
     try {
@@ -57,7 +108,6 @@ function page({ params }) {
   };
 
   const handleDeleteMovieWatchList = async (movieId, watchListId) => {
-    console.log({ movieId, watchListId });
     const authToken = localStorage.getItem("authToken");
     try {
       const response = await fetch(
@@ -120,6 +170,7 @@ function page({ params }) {
               </>
             ) : (
               <>
+                {chartData.length !== 0 && <PieChart chartData={chartData} />}
                 {watchList.map((data) => {
                   return (
                     <div className="flex items-start space-x-5 mt-5">

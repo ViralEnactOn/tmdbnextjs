@@ -7,11 +7,8 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import * as solid from "@heroicons/react/20/solid";
 import { Popover, Transition } from "@headlessui/react";
-import {
-  EllipsisHorizontalCircleIcon,
-  HeartIcon,
-  PlusIcon,
-} from "@heroicons/react/20/solid";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { HeartIcon, PlusIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
@@ -28,6 +25,7 @@ function MainContainer() {
   const [selectedIndices, setSelectedIndices] = useState([]);
   const [watchListData, setWatchListData] = useState([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [page, setPage] = useState(1);
   const [updateMultipleAtoms, setUpdateMultipleAtoms] = useRecoilState(
     updateAllDataSelector
   );
@@ -87,33 +85,43 @@ function MainContainer() {
   useEffect(() => {
     handleParams(selectedFilters);
     extractURLParameters();
-    handleMovie();
+    handleMovie(1);
+    setMovie([]);
+    setPage(1);
     if (watchListData.length === 0) {
       fetchWatchList();
     }
   }, [selectedFilters]);
 
-  const handleMovie = async () => {
-    setLazyLoading(true);
-    setLoader(true);
+  const handleMovie = async (page) => {
     try {
       const endPoint = new URL(config.app.base_url + "/movie/pagination");
       const params = new URLSearchParams({
-        page: 1,
-        sort_by: parameters.sortType,
-        release_date_gte: parameters.releaseDateGte,
-        release_date_lte: parameters.releaseDateLte,
-        vote_average_gte: parameters.voteAverageGte,
-        vote_average_lte: parameters.voteAverageLte,
-        runtime_gte: parameters.runtimeGte,
-        runtime_lte: parameters.runtimeLte,
-        vote_count_lte: parameters.voteCountLte,
+        page: page,
+        sort_by: parameters.sortType ? parameters.sortType : "",
+        release_date_gte: parameters.releaseDateGte
+          ? parameters.releaseDateGte
+          : "",
+        release_date_lte: parameters.releaseDateLte
+          ? parameters.releaseDateLte
+          : "",
+        vote_average_gte: parameters.voteAverageGte
+          ? parameters.voteAverageGte
+          : "",
+        vote_average_lte: parameters.voteAverageLte
+          ? parameters.voteAverageLte
+          : "",
+        runtime_gte: parameters.runtimeGte ? parameters.runtimeGte : "",
+        runtime_lte: parameters.runtimeLte ? parameters.runtimeLte : "",
+        vote_count_lte: parameters.voteCountLte
+          ? parameters.voteAverageLte
+          : "",
         genre_ids: parameters.genresList ? parameters.genresList : "",
         vote_count_gte: 0,
       });
 
       endPoint.search = params.toString();
-      fetch(endPoint, {
+      await fetch(endPoint, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -121,8 +129,14 @@ function MainContainer() {
       }).then(async (res) => {
         const response = await res.json();
         setLoader(false);
-        setMovie(response.movies);
-
+        // setMovie(response.movies);
+        setMovie((prevMovie) => {
+          if (prevMovie === null || prevMovie === undefined) {
+            return response.movies;
+          } else {
+            return [...prevMovie, ...response.movies];
+          }
+        });
         setTimeout(() => {
           setLazyLoading(false);
         }, 5000);
@@ -224,6 +238,12 @@ function MainContainer() {
     }
   };
 
+  const handlePageClick = async () => {
+    await extractURLParameters();
+    await handleMovie(page + 1);
+    setPage(page + 1);
+  };
+
   return (
     <>
       {/* Display selected filters as chips */}
@@ -291,140 +311,164 @@ function MainContainer() {
             </>
           ) : (
             <>
-              <div className="mx-auto relative grid gap-10 s:gap-4 md:gap-10 mt-5 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
-                {movie.length !== 0 &&
-                  movie.map((item, index) => {
-                    let dateObj = new Date(item.release_date);
-                    let formattedDate = dateObj.toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "2-digit",
-                      year: "numeric",
-                    });
-                    return (
-                      <div
-                        key={index}
-                        className="rounded-lg border-solid border-2 flex sm:flex-col w-[calc(100vw-32px)] sm:w-[148px] s:h-25"
-                      >
-                        <div className="relative rounded-t-lg s:hidden sm:block">
-                          {lazyLoading === true ? (
-                            <Skeleton height={245} />
-                          ) : (
-                            <>
-                              <img
-                                src={item.poster_path}
-                                alt={item.original_title}
-                                className={`rounded-t-lg h-60 s:w-[200px] ${
-                                  selectedIndex === index ? "filter blur" : ""
-                                }`}
-                              />
-                              {/* Like Icon */}
-                              <div className="absolute top-3 left-2">
-                                <HeartIcon
-                                  className={`${
-                                    selectedIndices.includes(index)
-                                      ? "text-red-500"
-                                      : ""
-                                  } h-5 w-5 text-gray-100 transition duration-150 ease-in-out group-hover:text-opacity-80 `}
-                                  aria-hidden="true"
-                                  onClick={() =>
-                                    handleAddMovieFavorite(index, item.id)
-                                  }
-                                />
-                              </div>
-                              {/* Add to watch list icon */}
-                              <div className="absolute top-3 left-10">
-                                <Popover className="relative">
-                                  {({ open }) => (
-                                    <>
-                                      <Popover.Button>
-                                        <PlusIcon
-                                          className={`${
-                                            open ? "" : "text-opacity-70"
-                                          } h-5 w-5 text-gray-100 transition duration-150 ease-in-out group-hover:text-opacity-80 `}
-                                          aria-hidden="true"
-                                          onClick={() => {
-                                            handleImageClick(index);
-                                            setIsPopoverOpen(!isPopoverOpen);
-                                          }}
-                                        />
-                                      </Popover.Button>
-                                      <Transition
-                                        as={Fragment}
-                                        show={
-                                          isPopoverOpen &&
-                                          selectedIndex === index
-                                        }
-                                        enter="transition ease-out duration-200"
-                                        enterFrom="opacity-0 translate-y-1"
-                                        enterTo="opacity-100 translate-y-0"
-                                        leave="transition ease-in duration-150"
-                                        leaveFrom="opacity-100 translate-y-0"
-                                        leaveTo="opacity-0 translate-y-1"
-                                      >
-                                        <Popover.Panel className="absolute left-1/2 z-10 mt-3 max-w-[300px] w-[300px] -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
-                                          <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
-                                            {watchListData.map((data) => {
-                                              return (
-                                                <div className="bg-gray-50 p-4">
-                                                  <button
-                                                    className="text-sm font-medium text-gray-900"
-                                                    onClick={() => {
-                                                      handleAddMovieWatchList(
-                                                        item.id,
-                                                        data.user_watch_list_id
-                                                      );
-                                                      setIsPopoverOpen(
-                                                        !isPopoverOpen
-                                                      );
-                                                    }}
-                                                  >
-                                                    {data.user_watch_list_name}
-                                                  </button>
-                                                </div>
-                                              );
-                                            })}
-                                          </div>
-                                        </Popover.Panel>
-                                      </Transition>
-                                    </>
-                                  )}
-                                </Popover>
-                              </div>
-                            </>
-                          )}
-                        </div>
+              <InfiniteScroll
+                dataLength={movie ? movie.length : 20}
+                next={handlePageClick}
+                hasMore={movie ? (movie.length === 150 ? false : true) : true}
+                loader={
+                  <div className="flex justify-center mt-10 mb-10">
+                    <ThreeCircles
+                      height="50"
+                      width="50"
+                      color="#4d94a9"
+                      wrapperStyle={{}}
+                      wrapperClass=""
+                      visible={true}
+                      ariaLabel="three-circles-rotating"
+                      outerCircleColor=""
+                      innerCircleColor=""
+                      middleCircleColor=""
+                    />
+                  </div>
+                }
+              >
+                <div className="mx-auto relative grid gap-10 s:gap-4 md:gap-10 mt-5 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+                  {movie.length !== 0 &&
+                    movie.map((item, index) => {
+                      let dateObj = new Date(item.release_date);
+                      let formattedDate = dateObj.toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "2-digit",
+                        year: "numeric",
+                      });
+                      return (
                         <div
-                          className={`flex ${
-                            selectedIndex === index ? "filter blur" : ""
-                          }`}
+                          key={index}
+                          className="rounded-lg border-solid border-2 flex sm:flex-col w-[calc(100vw-32px)] sm:w-[148px] s:h-25"
                         >
-                          <div className="rounded-l-lg s:block sm:hidden flex-none">
+                          <div className="relative rounded-t-lg s:hidden sm:block">
                             {lazyLoading === true ? (
-                              <Skeleton height={130} width={90} />
+                              <Skeleton height={245} />
                             ) : (
-                              <img
-                                src={item.poster_path}
-                                alt={item.original_title}
-                                className="rounded-l-lg h-[130px] w-[90px]"
-                              />
+                              <>
+                                <img
+                                  src={item.poster_path}
+                                  alt={item.original_title}
+                                  className={`rounded-t-lg h-60 s:w-[200px] ${
+                                    selectedIndex === index ? "filter blur" : ""
+                                  }`}
+                                />
+                                {/* Like Icon */}
+                                <div className="absolute top-3 left-2">
+                                  <HeartIcon
+                                    className={`${
+                                      selectedIndices.includes(index)
+                                        ? "text-red-500"
+                                        : ""
+                                    } h-5 w-5 text-gray-100 transition duration-150 ease-in-out group-hover:text-opacity-80 `}
+                                    aria-hidden="true"
+                                    onClick={() =>
+                                      handleAddMovieFavorite(index, item.id)
+                                    }
+                                  />
+                                </div>
+                                {/* Add to watch list icon */}
+                                <div className="absolute top-3 left-10">
+                                  <Popover className="relative">
+                                    {({ open }) => (
+                                      <>
+                                        <Popover.Button>
+                                          <PlusIcon
+                                            className={`${
+                                              open ? "" : "text-opacity-70"
+                                            } h-5 w-5 text-gray-100 transition duration-150 ease-in-out group-hover:text-opacity-80 `}
+                                            aria-hidden="true"
+                                            onClick={() => {
+                                              handleImageClick(index);
+                                              setIsPopoverOpen(!isPopoverOpen);
+                                            }}
+                                          />
+                                        </Popover.Button>
+                                        <Transition
+                                          as={Fragment}
+                                          show={
+                                            isPopoverOpen &&
+                                            selectedIndex === index
+                                          }
+                                          enter="transition ease-out duration-200"
+                                          enterFrom="opacity-0 translate-y-1"
+                                          enterTo="opacity-100 translate-y-0"
+                                          leave="transition ease-in duration-150"
+                                          leaveFrom="opacity-100 translate-y-0"
+                                          leaveTo="opacity-0 translate-y-1"
+                                        >
+                                          <Popover.Panel className="absolute left-1/2 z-10 mt-3 max-w-[300px] w-[300px] -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
+                                            <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+                                              {watchListData.map((data) => {
+                                                return (
+                                                  <div className="bg-gray-50 p-4">
+                                                    <button
+                                                      className="text-sm font-medium text-gray-900"
+                                                      onClick={() => {
+                                                        handleAddMovieWatchList(
+                                                          item.id,
+                                                          data.user_watch_list_id
+                                                        );
+                                                        setIsPopoverOpen(
+                                                          !isPopoverOpen
+                                                        );
+                                                      }}
+                                                    >
+                                                      {
+                                                        data.user_watch_list_name
+                                                      }
+                                                    </button>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          </Popover.Panel>
+                                        </Transition>
+                                      </>
+                                    )}
+                                  </Popover>
+                                </div>
+                              </>
                             )}
                           </div>
-                          <div className="flex-1 p-2">
-                            <div className="font-semibold text-sm mt-2 sm:pl-0">
-                              {item.original_title ? item.original_title : ""}
+                          <div
+                            className={`flex ${
+                              selectedIndex === index ? "filter blur" : ""
+                            }`}
+                          >
+                            <div className="rounded-l-lg s:block sm:hidden flex-none">
+                              {lazyLoading === true ? (
+                                <Skeleton height={130} width={90} />
+                              ) : (
+                                <img
+                                  src={item.poster_path}
+                                  alt={item.original_title}
+                                  className="rounded-l-lg h-[130px] w-[90px]"
+                                />
+                              )}
                             </div>
-                            <div className="mt-1 text-xs sm:pl-0">
-                              {formattedDate ? formattedDate : ""}
-                            </div>
-                            <div className="mt-5 text-sm line-clamp-2 sm:hidden">
-                              {item.overview ? item.overview + "..." : ""}
+                            <div className="flex-1 p-2">
+                              <div className="font-semibold text-sm mt-2 sm:pl-0">
+                                {item.original_title ? item.original_title : ""}
+                              </div>
+                              <div className="mt-1 text-xs sm:pl-0">
+                                {formattedDate ? formattedDate : ""}
+                              </div>
+                              <div className="mt-5 text-sm line-clamp-2 sm:hidden">
+                                {item.overview ? item.overview + "..." : ""}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-              </div>
+                      );
+                    })}
+                </div>
+              </InfiniteScroll>
             </>
           )}
         </>

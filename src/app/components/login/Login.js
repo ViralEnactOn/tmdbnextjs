@@ -14,10 +14,13 @@ function Login() {
   const [passwordError, setPasswordError] = useState("");
   const [disableButton, setDisableButton] = useState(false);
   const router = useRouter();
-
+  const emailValidation = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
   const handleSubmit = () => {
     if (username.length === 0) {
-      setUsernameError("Username cannot empty.");
+      setUsernameError("Email cannot be empty.");
+      return;
+    } else if (!emailValidation.test(username)) {
+      setUsernameError("Please enter a valid email address.");
       return;
     } else {
       setUsernameError("");

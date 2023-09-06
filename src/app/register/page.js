@@ -14,6 +14,8 @@ export default function register() {
   const [passwordError, setPasswordError] = useState("");
   const [isLogged, setIsLogged] = useState(false);
   const [disableButton, setDisableButton] = useState(false);
+  const emailValidation = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+
   const router = useRouter();
 
   const handleSubmit = () => {
@@ -24,7 +26,10 @@ export default function register() {
       setNameError("");
     }
     if (username.length === 0) {
-      setUsernameError("Username cannot empty.");
+      setUsernameError("Email cannot be empty.");
+      return;
+    } else if (!emailValidation.test(username)) {
+      setUsernameError("Please enter a valid email address.");
       return;
     } else {
       setUsernameError("");

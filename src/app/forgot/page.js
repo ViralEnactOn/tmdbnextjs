@@ -6,10 +6,13 @@ function forgot() {
   const [username, setUsername] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [disableButton, setDisableButton] = useState(false);
-
+  const emailValidation = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
   const handleSubmit = () => {
     if (username.length === 0) {
-      setUsernameError("Email cannot empty.");
+      setUsernameError("Email cannot be empty.");
+      return;
+    } else if (!emailValidation.test(username)) {
+      setUsernameError("Please enter a valid email address.");
       return;
     } else {
       setUsernameError("");
