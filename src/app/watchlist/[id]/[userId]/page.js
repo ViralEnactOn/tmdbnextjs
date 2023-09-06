@@ -5,12 +5,8 @@ import "react-circular-progressbar/dist/styles.css";
 import { ThreeCircles } from "react-loader-spinner";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import * as solid from "@heroicons/react/20/solid";
 import { Popover, Transition } from "@headlessui/react";
-import {
-  ChevronDownIcon,
-  EllipsisHorizontalCircleIcon,
-} from "@heroicons/react/20/solid";
+import { EllipsisHorizontalCircleIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import Heading from "@/app/components/movie/Heading";
 
@@ -18,7 +14,9 @@ function page({ params }) {
   const [lazyLoading, setLazyLoading] = useState(true);
   const [loader, setLoader] = useState(false);
   const [movie, setMovie] = useState([]);
+  const [watchList, setWatchList] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const handleImageClick = (index) => {
     if (selectedIndex === index) {
@@ -35,7 +33,7 @@ function page({ params }) {
   const fetchDetailWatchList = async () => {
     try {
       const response = await fetch(
-        `${config.app.base_url}/watchlist/fetchmovie/watch_list_id=${params.id}/isPublic=${params.isPublic}/user_id=${params.userId}`,
+        `${config.app.base_url}/watchlist/fetchmovie/watch_list_id=${params.id}/user_id=${params.userId}`,
         {
           method: "GET",
           headers: {
@@ -45,10 +43,43 @@ function page({ params }) {
       );
       if (response.ok) {
         const data = await response.json();
+        setWatchList(data.watchlist);
         setMovie(data.movieDetails);
         setTimeout(() => {
           setLazyLoading(false);
         }, 5000);
+      } else {
+        console.error("Error fetching watch list data");
+      }
+    } catch (error) {
+      console.error("Error fetching watch list data:", error);
+    }
+  };
+
+  const handleDeleteMovieWatchList = async (movieId, watchListId) => {
+    console.log({ movieId, watchListId });
+    const authToken = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(
+        `${config.app.base_url}/watchlist/removemovie`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: authToken,
+            movie_id: movieId,
+            id: watchListId,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedIndex(-1);
+        await fetchDetailWatchList();
+        alert(`${data.message}`);
       } else {
         console.error("Error fetching watch list data");
       }
@@ -89,6 +120,17 @@ function page({ params }) {
               </>
             ) : (
               <>
+                {watchList.map((data) => {
+                  return (
+                    <div className="flex items-start space-x-5 mt-5">
+                      <div className="pt-1.5">
+                        <h1 className="text-2xl font-bold text-gray-900">
+                          {data.name}
+                        </h1>
+                      </div>
+                    </div>
+                  );
+                })}
                 <div className="mx-auto relative grid gap-10 s:gap-4 md:gap-10 mt-5 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
                   {movie.length !== 0 &&
                     movie.map((item, index) => {
@@ -127,11 +169,16 @@ function page({ params }) {
                                             aria-hidden="true"
                                             onClick={() => {
                                               handleImageClick(index);
+                                              setIsPopoverOpen(!isPopoverOpen);
                                             }}
                                           />
                                         </Popover.Button>
                                         <Transition
                                           as={Fragment}
+                                          show={
+                                            isPopoverOpen &&
+                                            selectedIndex === index
+                                          }
                                           enter="transition ease-out duration-200"
                                           enterFrom="opacity-0 translate-y-1"
                                           enterTo="opacity-100 translate-y-0"
@@ -142,10 +189,21 @@ function page({ params }) {
                                           <Popover.Panel className="absolute left-1/2 z-10 mt-3 max-w-[300px] w-[300px] -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
                                             <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
                                               <div className="bg-gray-50 p-4">
-                                                <span className="text-sm font-medium text-gray-900">
+                                                <button
+                                                  className="text-sm font-medium text-gray-900"
+                                                  onClick={() => {
+                                                    handleDeleteMovieWatchList(
+                                                      item.id,
+                                                      params.id
+                                                    );
+                                                    setIsPopoverOpen(
+                                                      !isPopoverOpen
+                                                    );
+                                                  }}
+                                                >
                                                   Want to delete this movie from
                                                   a list?
-                                                </span>
+                                                </button>
                                               </div>
                                             </div>
                                           </Popover.Panel>

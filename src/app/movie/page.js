@@ -16,7 +16,7 @@ export default function page() {
             <div className="col-span-12  sm:col-span-3 xs:col-span-12">
               <div className="font-semibold text-xl">Popular Movie</div>
               <Sort />
-              <WhereToWatch />
+              {/* <WhereToWatch /> */}
               <Filters />
             </div>
             {/* Main Component */}

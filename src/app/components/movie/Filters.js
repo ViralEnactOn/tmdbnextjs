@@ -14,7 +14,7 @@ import {
   runtimeLte,
   voteAverageGte,
   voteAverageLte,
-  voteCountGte,
+  voteCountLte,
 } from "@/app/atoms/atoms";
 
 function Filters() {
@@ -35,7 +35,7 @@ function Filters() {
     useRecoilState(certificationList);
   const [voteAverageGt, setVoteAverageGt] = useRecoilState(voteAverageGte);
   const [voteAverageLt, setVoteAverageLt] = useRecoilState(voteAverageLte);
-  const [voteCountGt, setVoteCountGt] = useRecoilState(voteCountGte);
+  const [voteCountLt, setVoteCountLt] = useRecoilState(voteCountLte);
   const [runtimeGt, setRuntimeGt] = useRecoilState(runtimeGte);
   const [runtimeLt, setRuntimeLt] = useRecoilState(runtimeLte);
   // Open / Close
@@ -137,7 +137,7 @@ function Filters() {
   // Handle Minimum User Score
   const handleChangeMinUserScore = (value) => {
     setMinUserScore(value[1] * 5);
-    setVoteCountGt(value[1] * 5);
+    setVoteCountLt(value[1] * 5);
   };
 
   // Handle Runtime
@@ -217,38 +217,6 @@ function Filters() {
                         value={name.value}
                       >
                         {name.name}
-                      </div>
-                    </div>
-                  </>
-                );
-              })}
-          </div>
-
-          {/* Certification */}
-          <div className="border-t-2 mt-3 pt-2 text-gray-400">
-            Certification
-          </div>
-          <div className="grid grid-cols-3 gap-2 mt-3 ">
-            {genres.length !== 0 &&
-              certification.map((name, index) => {
-                return (
-                  <>
-                    <div
-                      className="text-center text-sm transition-colors"
-                      key={index}
-                      onClick={() => handleCertificationSelected(name)}
-                    >
-                      <div
-                        className={
-                          selectedCertification.some(
-                            (selected) => selected.value === name
-                          )
-                            ? "selected p-1 hover:bg-white hover:text-black rounded-l-full rounded-r-full border-solid border-2 transition-colors text-xs"
-                            : "p-1 hover:bg-blue-300 hover:text-white rounded-l-full rounded-r-full border-spacing-2 border-solid border-2 transition-colors text-xs"
-                        }
-                        value={name}
-                      >
-                        {name}
                       </div>
                     </div>
                   </>

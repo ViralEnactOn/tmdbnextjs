@@ -8,8 +8,9 @@ import "react-loading-skeleton/dist/skeleton.css";
 import * as solid from "@heroicons/react/20/solid";
 import { Popover, Transition } from "@headlessui/react";
 import {
-  ChevronDownIcon,
   EllipsisHorizontalCircleIcon,
+  HeartIcon,
+  PlusIcon,
 } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -24,7 +25,9 @@ function MainContainer() {
   const [loader, setLoader] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const selectedFilters = useRecoilValue(allDataSelector);
-
+  const [selectedIndices, setSelectedIndices] = useState([]);
+  const [watchListData, setWatchListData] = useState([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [updateMultipleAtoms, setUpdateMultipleAtoms] = useRecoilState(
     updateAllDataSelector
   );
@@ -85,52 +88,40 @@ function MainContainer() {
     handleParams(selectedFilters);
     extractURLParameters();
     handleMovie();
+    if (watchListData.length === 0) {
+      fetchWatchList();
+    }
   }, [selectedFilters]);
 
   const handleMovie = async () => {
     setLazyLoading(true);
     setLoader(true);
     try {
-      const endPoint = new URL(config.tmdb_services.API_URL + "discover/movie");
-
+      const endPoint = new URL(config.app.base_url + "/movie/pagination");
       const params = new URLSearchParams({
         page: 1,
-        language: "en-US",
-        include_adult: false,
-        include_video: false,
         sort_by: parameters.sortType,
-        watch_region: parameters.countryName,
-        with_watch_providers:
-          parameters.watchProviders === undefined
-            ? ""
-            : parameters.watchProviders.replace(/,/g, "|"),
-        "release_date.gte": parameters.releaseDateGte,
-        "release_date.lte": parameters.releaseDateLte,
-        certification:
-          parameters.certificationList === undefined
-            ? ""
-            : parameters.certificationList.replace(/,/g, "|"),
-        "vote_average.gte": parameters.voteAverageGte,
-        "vote_average.lte": parameters.voteAverageLte,
-        "with_runtime.gte": parameters.runtimeGte,
-        "with_runtime.lte": parameters.runtimeLte,
+        release_date_gte: parameters.releaseDateGte,
+        release_date_lte: parameters.releaseDateLte,
+        vote_average_gte: parameters.voteAverageGte,
+        vote_average_lte: parameters.voteAverageLte,
+        runtime_gte: parameters.runtimeGte,
+        runtime_lte: parameters.runtimeLte,
+        vote_count_lte: parameters.voteCountLte,
+        genre_ids: parameters.genresList ? parameters.genresList : "",
+        vote_count_gte: 0,
       });
-      if (parameters.genresList !== "") {
-        params.with_genres = parameters.genresList;
-      }
-      if (parameters.voteCountGte !== "") {
-        params["vote_count.lte"] = 0;
-        params["vote_count.gte"] = parameters.voteCountGte;
-      }
+
       endPoint.search = params.toString();
       fetch(endPoint, {
         method: "GET",
-        headers: config.tmdb_services.Header,
+        headers: {
+          "Content-Type": "application/json",
+        },
       }).then(async (res) => {
         const response = await res.json();
         setLoader(false);
-        // setMovie(res.data.results);
-        setMovie(response.results);
+        setMovie(response.movies);
 
         setTimeout(() => {
           setLazyLoading(false);
@@ -143,17 +134,95 @@ function MainContainer() {
 
   const handleImageClick = (index) => {
     if (selectedIndex === index) {
-      setSelectedIndex(-1); // Unselect the image if it's already selected
+      setSelectedIndex(-1);
     } else {
-      setSelectedIndex(index); // Select a new image
+      setSelectedIndex(index);
     }
   };
 
-  const solutions = [
-    {
-      name: "Want to rate or add this item to a list?",
-    },
-  ];
+  const handleAddMovieFavorite = async (index, movieId) => {
+    if (selectedIndices.includes(index)) {
+      setSelectedIndices(selectedIndices.filter((i) => i !== index));
+    } else {
+      setSelectedIndices([...selectedIndices, index]);
+    }
+    const authToken = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(`${config.app.base_url}/favorite/insert`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: authToken,
+          type: "movie",
+          items: movieId,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedIndex(-1);
+        alert(`${data.message}`);
+      } else {
+        console.error("Error fetching watch list data");
+      }
+    } catch (error) {
+      console.error("Error fetching watch list data:", error);
+    }
+  };
+
+  const fetchWatchList = async () => {
+    const authToken = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(`${config.app.base_url}/watchlist/fetch`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: authToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setWatchListData(data.watch_list);
+      } else {
+        console.error("Error fetching watch list data");
+      }
+    } catch (error) {
+      console.error("Error fetching watch list data:", error);
+    }
+  };
+
+  const handleAddMovieWatchList = async (movieId, watchListId) => {
+    const authToken = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(
+        `${config.app.base_url}/watchlist/insertmovie`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: authToken,
+            movie_id: movieId,
+            id: watchListId,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedIndex(-1);
+        alert(`${data.message}`);
+      } else {
+        console.error("Error fetching watch list data");
+      }
+    } catch (error) {
+      console.error("Error fetching watch list data:", error);
+    }
+  };
 
   return (
     <>
@@ -242,35 +311,49 @@ function MainContainer() {
                           ) : (
                             <>
                               <img
-                                src={
-                                  item.poster_path
-                                    ? config.tmdb_services.IMAGE_URL +
-                                      item.poster_path
-                                    : config.tmdb_services.IMAGE_URL +
-                                      item.backdrop_path
-                                }
+                                src={item.poster_path}
                                 alt={item.original_title}
                                 className={`rounded-t-lg h-60 s:w-[200px] ${
                                   selectedIndex === index ? "filter blur" : ""
                                 }`}
                               />
-                              <div className="absolute top-3 left-28">
+                              {/* Like Icon */}
+                              <div className="absolute top-3 left-2">
+                                <HeartIcon
+                                  className={`${
+                                    selectedIndices.includes(index)
+                                      ? "text-red-500"
+                                      : ""
+                                  } h-5 w-5 text-gray-100 transition duration-150 ease-in-out group-hover:text-opacity-80 `}
+                                  aria-hidden="true"
+                                  onClick={() =>
+                                    handleAddMovieFavorite(index, item.id)
+                                  }
+                                />
+                              </div>
+                              {/* Add to watch list icon */}
+                              <div className="absolute top-3 left-10">
                                 <Popover className="relative">
                                   {({ open }) => (
                                     <>
                                       <Popover.Button>
-                                        <EllipsisHorizontalCircleIcon
+                                        <PlusIcon
                                           className={`${
                                             open ? "" : "text-opacity-70"
                                           } h-5 w-5 text-gray-100 transition duration-150 ease-in-out group-hover:text-opacity-80 `}
                                           aria-hidden="true"
                                           onClick={() => {
                                             handleImageClick(index);
+                                            setIsPopoverOpen(!isPopoverOpen);
                                           }}
                                         />
                                       </Popover.Button>
                                       <Transition
                                         as={Fragment}
+                                        show={
+                                          isPopoverOpen &&
+                                          selectedIndex === index
+                                        }
                                         enter="transition ease-out duration-200"
                                         enterFrom="opacity-0 translate-y-1"
                                         enterTo="opacity-100 translate-y-0"
@@ -278,14 +361,28 @@ function MainContainer() {
                                         leaveFrom="opacity-100 translate-y-0"
                                         leaveTo="opacity-0 translate-y-1"
                                       >
-                                        <Popover.Panel className="absolute  left-1/2 z-10 mt-3 max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
+                                        <Popover.Panel className="absolute left-1/2 z-10 mt-3 max-w-[300px] w-[300px] -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
                                           <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
-                                            <div className="bg-gray-50 p-4">
-                                              <span className="text-sm font-medium text-gray-900 ">
-                                                Want to rate or add this item to
-                                                a list?
-                                              </span>
-                                            </div>
+                                            {watchListData.map((data) => {
+                                              return (
+                                                <div className="bg-gray-50 p-4">
+                                                  <button
+                                                    className="text-sm font-medium text-gray-900"
+                                                    onClick={() => {
+                                                      handleAddMovieWatchList(
+                                                        item.id,
+                                                        data.user_watch_list_id
+                                                      );
+                                                      setIsPopoverOpen(
+                                                        !isPopoverOpen
+                                                      );
+                                                    }}
+                                                  >
+                                                    {data.user_watch_list_name}
+                                                  </button>
+                                                </div>
+                                              );
+                                            })}
                                           </div>
                                         </Popover.Panel>
                                       </Transition>
@@ -306,13 +403,7 @@ function MainContainer() {
                               <Skeleton height={130} width={90} />
                             ) : (
                               <img
-                                src={
-                                  item.poster_path
-                                    ? config.tmdb_services.MOBILE_IMAGE_URL +
-                                      item.poster_path
-                                    : config.tmdb_services.MOBILE_IMAGE_URL +
-                                      item.backdrop_path
-                                }
+                                src={item.poster_path}
                                 alt={item.original_title}
                                 className="rounded-l-lg h-[130px] w-[90px]"
                               />

@@ -15,7 +15,7 @@ const people = [
   { name: "Popularity Ascending", value: "popularity.asc" },
   { name: "Rating Descending", value: "vote_average.desc" },
   { name: "Rating Ascending", value: "vote_average.asc" },
-  { name: "Release Date Descending", value: "primary_release_date.desc" },
+  { name: "Release Date Descending", value: "release_date.desc" },
   { name: "Title (A-Z)", value: "title.asc" },
   { name: "Title (Z-A)", value: "title.desc" },
 ];

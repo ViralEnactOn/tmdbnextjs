@@ -15,7 +15,6 @@ function watchList() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [watchListName, setWatchListName] = useState("");
-  const [isPublic, setIsPublic] = useState("");
   const [watchListNameError, setWatchListNameError] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
   const router = useRouter();
@@ -60,7 +59,6 @@ function watchList() {
         body: JSON.stringify({
           token: authToken,
           name: watchListName,
-          isPublic: isPublic,
         }),
       });
 
@@ -123,7 +121,6 @@ function watchList() {
               body: JSON.stringify({
                 id: id,
                 name: item.user_watch_list_name,
-                isPublic: item.user_watch_list_is_public === "Yes" ? 1 : 0,
                 token: authToken,
               }),
             }
@@ -144,7 +141,7 @@ function watchList() {
   };
 
   const detailWatch = async (data) => {
-    router.push(`/watchlist/${data.id}/${data.isPublic}/${data.user_id}`);
+    router.push(`/watchlist/${data.id}/${data.user_id}`);
   };
 
   const openModal = () => {
@@ -169,14 +166,23 @@ function watchList() {
         <main className="min-w-max flex justify-center font-sans flex-shrink-0">
           <div className="container">
             <Heading />
-            <div className=" flex flex-col-reverse justify-stretch space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-x-3 sm:space-y-0 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3 ">
-              <button
-                type="button"
-                className="mt-5 inline-flex items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                onClick={openModal}
-              >
-                Insert Watch List
-              </button>
+            <div className="flex justify-between mt-5">
+              <div className="flex items-start space-x-5">
+                <div className="pt-1.5">
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Watch List
+                  </h1>
+                </div>
+              </div>
+              <div className=" flex flex-col-reverse justify-stretch space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-x-3 sm:space-y-0 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3 ">
+                <button
+                  type="button"
+                  className=" inline-flex items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                  onClick={openModal}
+                >
+                  Insert Watch List
+                </button>
+              </div>
             </div>
             <ul
               role="list"
@@ -189,13 +195,16 @@ function watchList() {
                 >
                   <div
                     className="flex flex-1 flex-col p-8"
-                    onClick={() => {
-                      detailWatch({
-                        id: data.user_watch_list_id,
-                        isPublic: data.user_watch_list_is_public,
-                        user_id: data.user_id,
-                      });
-                    }}
+                    onClick={
+                      selectedRow === null
+                        ? () => {
+                            detailWatch({
+                              id: data.user_watch_list_id,
+                              user_id: data.user_id,
+                            });
+                          }
+                        : undefined
+                    }
                   >
                     {selectedRow === index ? (
                       <input
@@ -216,36 +225,6 @@ function watchList() {
                         {data.user_watch_list_name}
                       </h3>
                     )}
-
-                    <dd className="mt-3">
-                      {selectedRow === index ? (
-                        <select
-                          value={data.user_watch_list_is_public}
-                          onChange={(e) =>
-                            setWatchListData((prevData) => {
-                              const newData = [...prevData];
-                              newData[index].user_watch_list_is_public =
-                                e.target.value;
-                              return newData;
-                            })
-                          }
-                          id="country"
-                          name="country"
-                          autoComplete="country-name"
-                          className="pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 "
-                        >
-                          <option>Yes</option>
-                          <option>No</option>
-                        </select>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                          Is Public :{" "}
-                          {data.user_watch_list_is_public === 1
-                            ? "True"
-                            : "False"}
-                        </span>
-                      )}
-                    </dd>
                   </div>
                   {/* Button */}
                   <div>
@@ -375,29 +354,6 @@ function watchList() {
                                 {watchListNameError}
                               </div>
                             )}
-                          </div>
-                        </div>
-                        <div className="col-span-full">
-                          <label
-                            htmlFor="country"
-                            className="block text-sm font-medium leading-6 text-gray-900"
-                          >
-                            Is Public
-                          </label>
-                          <div className="mt-2">
-                            <select
-                              value={isPublic}
-                              onChange={(event) => {
-                                setIsPublic(event.target.value);
-                              }}
-                              id="country"
-                              name="country"
-                              autoComplete="country-name"
-                              className="pl-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 "
-                            >
-                              <option>Yes</option>
-                              <option>No</option>
-                            </select>
                           </div>
                         </div>
                       </div>

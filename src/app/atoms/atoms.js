@@ -50,8 +50,8 @@ export const voteAverageLte = atom({
   default: "",
 });
 
-export const voteCountGte = atom({
-  key: "voteCountGte",
+export const voteCountLte = atom({
+  key: "voteCountLte",
   default: "",
 });
 

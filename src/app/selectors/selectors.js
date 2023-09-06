@@ -11,7 +11,7 @@ import {
   userDetails,
   voteAverageGte,
   voteAverageLte,
-  voteCountGte,
+  voteCountLte,
   watchProviders,
 } from "../atoms/atoms";
 
@@ -29,7 +29,7 @@ export const allDataSelector = selector({
       certificationList: get(certificationList),
       voteAverageGte: get(voteAverageGte),
       voteAverageLte: get(voteAverageLte),
-      voteCountGte: get(voteCountGte),
+      voteCountLte: get(voteCountLte),
       runtimeGte: get(runtimeGte),
       runtimeLte: get(runtimeLte),
     };
@@ -48,7 +48,7 @@ export const updateAllDataSelector = selector({
     certificationList: get(certificationList),
     voteAverageGte: get(voteAverageGte),
     voteAverageLte: get(voteAverageLte),
-    voteCountGte: get(voteCountGte),
+    voteCountLte: get(voteCountLte),
     runtimeGte: get(runtimeGte),
     runtimeLte: get(runtimeLte),
   }),
@@ -62,7 +62,7 @@ export const updateAllDataSelector = selector({
     set(certificationList, newValue.certificationList);
     set(voteAverageGte, newValue.voteAverageGte);
     set(voteAverageLte, newValue.voteAverageLte);
-    set(voteCountGte, newValue.voteCountGte);
+    set(voteCountLte, newValue.voteCountLte);
     set(runtimeGte, newValue.runtimeGte);
     set(runtimeLte, newValue.runtimeLte);
   },
