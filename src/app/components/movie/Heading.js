@@ -50,7 +50,7 @@ function Heading() {
   return (
     <>
       {loading ? (
-        <div>Loading...</div>
+        <></>
       ) : (
         userData.map((data) => (
           <div

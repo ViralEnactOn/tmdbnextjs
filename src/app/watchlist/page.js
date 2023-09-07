@@ -9,6 +9,7 @@ import Heading from "../components/movie/Heading";
 import config from "../config/config";
 import { Dialog, Transition } from "@headlessui/react";
 import { useRouter } from "next/navigation";
+import { ThreeCircles } from "react-loader-spinner";
 
 function watchList() {
   const [watchListData, setWatchListData] = useState([]);
@@ -155,13 +156,36 @@ function watchList() {
   };
 
   useEffect(() => {
-    fetchWatchList();
+    const authToken = localStorage.getItem("authToken");
+    const authTokenExpiration = localStorage.getItem("authTokenExpiration");
+    const isLoggedIn =
+      authToken !== null && new Date().getTime() < authTokenExpiration;
+    if (isLoggedIn === true) {
+      fetchWatchList();
+    } else {
+      router.push("/");
+    }
   }, []);
 
   return (
     <>
       {loading ? (
-        <div>Loading...</div>
+        <>
+          <div className="flex justify-center h-screen s:items-start md:items-center">
+            <ThreeCircles
+              height="100"
+              width="100"
+              color="#4fa94d"
+              wrapperStyle={{}}
+              wrapperClass=""
+              visible={true}
+              ariaLabel="three-circles-rotating"
+              outerCircleColor=""
+              innerCircleColor=""
+              middleCircleColor=""
+            />
+          </div>
+        </>
       ) : (
         <main className="min-w-max flex justify-center font-sans flex-shrink-0">
           <div className="container">

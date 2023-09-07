@@ -5,23 +5,31 @@ import "react-circular-progressbar/dist/styles.css";
 import { ThreeCircles } from "react-loader-spinner";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { Popover, Transition } from "@headlessui/react";
-import { EllipsisHorizontalCircleIcon } from "@heroicons/react/20/solid";
+import { Popover, Transition, Dialog, Switch } from "@headlessui/react";
+import {
+  EllipsisHorizontalCircleIcon,
+  ClipboardDocumentCheckIcon,
+} from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import Heading from "@/app/components/movie/Heading";
 import PieChart from "@/app/components/chart/PieChart";
 import { CategoryScale } from "chart.js";
 import Chart from "chart.js/auto";
+import { useRouter } from "next/navigation";
 
 Chart.register(CategoryScale);
 function page({ params }) {
   const [lazyLoading, setLazyLoading] = useState(true);
-  const [loader, setLoader] = useState(false);
+  const [loader, setLoader] = useState(true);
   const [movie, setMovie] = useState([]);
   const [watchList, setWatchList] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [chartData, setChartData] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+
+  const router = useRouter();
 
   const handleImageClick = (index) => {
     if (selectedIndex === index) {
@@ -32,8 +40,16 @@ function page({ params }) {
   };
 
   useEffect(() => {
-    fetchChartDetails();
-    fetchDetailWatchList();
+    const authToken = localStorage.getItem("authToken");
+    const authTokenExpiration = localStorage.getItem("authTokenExpiration");
+    const isLoggedIn =
+      authToken !== null && new Date().getTime() < authTokenExpiration;
+    if (isLoggedIn === true) {
+      fetchChartDetails();
+      fetchDetailWatchList();
+    } else {
+      router.push("/");
+    }
   }, []);
 
   const fetchChartDetails = async () => {
@@ -96,6 +112,7 @@ function page({ params }) {
         const data = await response.json();
         setWatchList(data.watchlist);
         setMovie(data.movieDetails);
+        setLoader(false);
         setTimeout(() => {
           setLazyLoading(false);
         }, 5000);
@@ -137,6 +154,25 @@ function page({ params }) {
       console.error("Error fetching watch list data:", error);
     }
   };
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
+  const copyToClipboard = () => {
+    const linkToCopy = `${window.location.origin}/public/watchlist/${params.id}/${params.userId}`;
+    const input = document.createElement("input");
+    input.value = linkToCopy;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand("copy");
+    document.body.removeChild(input);
+  };
+
   return (
     <main className="min-w-max flex justify-center bg-#000 font-sans flex-shrink-0">
       <div className="container ">
@@ -170,19 +206,35 @@ function page({ params }) {
               </>
             ) : (
               <>
-                {chartData.length !== 0 && <PieChart chartData={chartData} />}
-                {watchList.map((data) => {
-                  return (
-                    <div className="flex items-start space-x-5 mt-5">
-                      <div className="pt-1.5">
-                        <h1 className="text-2xl font-bold text-gray-900">
-                          {data.name}
-                        </h1>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div className="mx-auto relative grid gap-10 s:gap-4 md:gap-10 mt-5 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+                <div className="flex justify-between mt-5">
+                  <div>
+                    {watchList.map((data) => {
+                      return (
+                        <div className="flex items-start space-x-5">
+                          <div className="pt-1.5">
+                            <h1 className="text-2xl font-bold text-gray-900">
+                              {data.name}
+                            </h1>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className=" flex flex-col-reverse justify-stretch space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-end sm:space-x-3 sm:space-y-0 sm:space-x-reverse md:mt-0 md:flex-row md:space-x-3 ">
+                    <button
+                      onClick={openModal}
+                      type="button"
+                      className="inline-flex items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                    >
+                      Share watch list
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex justify-center myChart">
+                  {chartData.length !== 0 && <PieChart chartData={chartData} />}
+                </div>
+                <div className="mx-auto relative grid gap-10 s:gap-4 md:gap-10 mt-10 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 ">
                   {movie.length !== 0 &&
                     movie.map((item, index) => {
                       let dateObj = new Date(item.release_date);
@@ -303,6 +355,89 @@ function page({ params }) {
           </>
         )}
       </div>
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={closeModal}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900"
+                  >
+                    Share watch list
+                  </Dialog.Title>
+                  <div className="mt-5 ">
+                    <div className="col-span-full flex justify-between">
+                      <div>
+                        <label
+                          htmlFor="street-address"
+                          className="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Share link with anyone
+                        </label>
+                      </div>
+                      <div>
+                        <Switch
+                          checked={enabled}
+                          onChange={setEnabled}
+                          className={`${
+                            enabled ? "bg-blue-600" : "bg-gray-200"
+                          } relative inline-flex h-6 w-11 items-center rounded-full`}
+                        >
+                          <span className="sr-only">Enable notifications</span>
+                          <span
+                            className={`${
+                              enabled ? "translate-x-6" : "translate-x-1"
+                            } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                          />
+                        </Switch>
+                      </div>
+                    </div>
+                    <div>
+                      {enabled ? (
+                        <>
+                          <div className="col-span-full flex mt-5">
+                            <button
+                              type="submit"
+                              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                              onClick={() => copyToClipboard()}
+                            >
+                              Copy public link
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <></>
+                      )}
+                    </div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </main>
   );
 }

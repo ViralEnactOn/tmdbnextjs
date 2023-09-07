@@ -11,6 +11,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { HeartIcon, PlusIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import { useRecoilState, useRecoilValue } from "recoil";
+import { useRouter } from "next/navigation";
 import {
   allDataSelector,
   updateAllDataSelector,
@@ -26,6 +27,7 @@ function MainContainer() {
   const [watchListData, setWatchListData] = useState([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const router = useRouter();
   const [updateMultipleAtoms, setUpdateMultipleAtoms] = useRecoilState(
     updateAllDataSelector
   );
@@ -83,13 +85,21 @@ function MainContainer() {
   };
 
   useEffect(() => {
-    handleParams(selectedFilters);
-    extractURLParameters();
-    handleMovie(1);
-    setMovie([]);
-    setPage(1);
-    if (watchListData.length === 0) {
-      fetchWatchList();
+    const authToken = localStorage.getItem("authToken");
+    const authTokenExpiration = localStorage.getItem("authTokenExpiration");
+    const isLoggedIn =
+      authToken !== null && new Date().getTime() < authTokenExpiration;
+    if (isLoggedIn === true) {
+      handleParams(selectedFilters);
+      extractURLParameters();
+      handleMovie(1);
+      setMovie([]);
+      setPage(1);
+      if (watchListData.length === 0) {
+        fetchWatchList();
+      }
+    } else {
+      router.push("/");
     }
   }, [selectedFilters]);
 
@@ -332,7 +342,7 @@ function MainContainer() {
                   </div>
                 }
               >
-                <div className="mx-auto relative grid gap-10 s:gap-4 md:gap-10 mt-5 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+                <div className="mx-auto absolute grid gap-10 s:gap-4 md:gap-10 mt-5 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
                   {movie.length !== 0 &&
                     movie.map((item, index) => {
                       let dateObj = new Date(item.release_date);

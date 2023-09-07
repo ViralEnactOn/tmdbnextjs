@@ -9,6 +9,7 @@ import { Popover, Transition } from "@headlessui/react";
 import { EllipsisHorizontalCircleIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import Heading from "@/app/components/movie/Heading";
+import { useRouter } from "next/navigation";
 
 function favorite() {
   const [lazyLoading, setLazyLoading] = useState(true);
@@ -16,6 +17,7 @@ function favorite() {
   const [movie, setMovie] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const router = useRouter();
 
   const handleImageClick = (index) => {
     if (selectedIndex === index) {
@@ -26,7 +28,15 @@ function favorite() {
   };
 
   useEffect(() => {
-    fetchFavoriteList();
+    const authToken = localStorage.getItem("authToken");
+    const authTokenExpiration = localStorage.getItem("authTokenExpiration");
+    const isLoggedIn =
+      authToken !== null && new Date().getTime() < authTokenExpiration;
+    if (isLoggedIn === true) {
+      fetchFavoriteList();
+    } else {
+      router.push("/");
+    }
   }, []);
 
   const fetchFavoriteList = async () => {

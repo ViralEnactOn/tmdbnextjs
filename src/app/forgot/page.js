@@ -2,16 +2,22 @@
 
 import React, { useState } from "react";
 import config from "@/app/config/config";
+import { ColorRing } from "react-loader-spinner";
+
 function forgot() {
   const [username, setUsername] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [disableButton, setDisableButton] = useState(false);
   const emailValidation = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+
   const handleSubmit = () => {
+    setDisableButton(true);
     if (username.length === 0) {
+      setDisableButton(false);
       setUsernameError("Email cannot be empty.");
       return;
     } else if (!emailValidation.test(username)) {
+      setDisableButton(false);
       setUsernameError("Please enter a valid email address.");
       return;
     } else {
@@ -27,10 +33,12 @@ function forgot() {
     })
       .then(async (res) => {
         const response = await res.json();
-        setDisableButton(false);
         if (res.status === 200) {
-          alert(response.message);
-          setUsername(" ");
+          setTimeout(() => {
+            alert(response.message);
+            setUsername(" ");
+            setDisableButton(false);
+          }, 3000);
         }
       })
       .catch((err) => {
@@ -79,12 +87,32 @@ function forgot() {
             </div>
           </div>
 
-          <div className="mt-5" onClick={() => handleSubmit()}>
+          <div className="mt-5">
             <button
               type="submit"
+              disabled={disableButton === true}
+              onClick={() => handleSubmit()}
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Send mail
+              {disableButton ? (
+                <ColorRing
+                  visible={true}
+                  height="30"
+                  width="30"
+                  ariaLabel="blocks-loading"
+                  wrapperStyle={{}}
+                  wrapperClass="blocks-wrapper"
+                  colors={[
+                    "#e15b64",
+                    "#f47e60",
+                    "#f8b26a",
+                    "#abbd81",
+                    "#849b87",
+                  ]}
+                />
+              ) : (
+                <>Send mail</>
+              )}
             </button>
           </div>
         </div>

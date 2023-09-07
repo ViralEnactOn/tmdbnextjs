@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import config from "@/app/config/config";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ColorRing } from "react-loader-spinner";
 
 export default function register() {
   const [username, setUsername] = useState("");
@@ -12,23 +13,26 @@ export default function register() {
   const [nameError, setNameError] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [isLogged, setIsLogged] = useState(false);
   const [disableButton, setDisableButton] = useState(false);
   const emailValidation = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
 
   const router = useRouter();
 
   const handleSubmit = () => {
+    setDisableButton(true);
     if (name.length === 0) {
+      setDisableButton(false);
       setNameError("Name cannot empty.");
       return;
     } else {
       setNameError("");
     }
     if (username.length === 0) {
+      setDisableButton(false);
       setUsernameError("Email cannot be empty.");
       return;
     } else if (!emailValidation.test(username)) {
+      setDisableButton(false);
       setUsernameError("Please enter a valid email address.");
       return;
     } else {
@@ -36,6 +40,7 @@ export default function register() {
     }
 
     if (password.length === 0) {
+      setDisableButton(false);
       setPasswordError("Password cannot empty.");
       return;
     } else {
@@ -52,9 +57,13 @@ export default function register() {
         setDisableButton(false);
         if (res.status === 200) {
           alert("User register successful");
-          router.push("/");
+          setTimeout(() => {
+            setDisableButton(false);
+            router.push("/");
+          }, 3000);
         }
         if (res.status === 400) {
+          setDisableButton(false);
           alert("User already exists");
         }
       })
@@ -157,10 +166,29 @@ export default function register() {
           </div>
           <div className="mt-5" onClick={() => handleSubmit()}>
             <button
+              disabled={disableButton === true}
               type="submit"
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Sign up
+              {disableButton ? (
+                <ColorRing
+                  visible={true}
+                  height="30"
+                  width="30"
+                  ariaLabel="blocks-loading"
+                  wrapperStyle={{}}
+                  wrapperClass="blocks-wrapper"
+                  colors={[
+                    "#e15b64",
+                    "#f47e60",
+                    "#f8b26a",
+                    "#abbd81",
+                    "#849b87",
+                  ]}
+                />
+              ) : (
+                <>Sign up</>
+              )}
             </button>
           </div>
         </div>

@@ -1,17 +1,16 @@
 import React from "react";
 import { Pie } from "react-chartjs-2";
 
-function PieChart({ chartData }) {
+function PieChart({ chartData, options }) {
   return (
-    <div className="h-52 w-52">
-      <h2 className="text-center ">Pie Chart</h2>
+    <div className="h-52 w-52 myChart">
       <Pie
         data={chartData}
         options={{
           plugins: {
             title: {
               display: true,
-              text: "Users Gained between 2016-2020",
+              text: "Watch list genre wise",
             },
           },
         }}

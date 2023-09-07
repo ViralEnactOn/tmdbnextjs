@@ -6,6 +6,7 @@ import { isTokenExpired } from "@/app/utils/jwtUtils";
 import Link from "next/link";
 import { useRecoilState } from "recoil";
 import { userDetails } from "@/app/atoms/atoms";
+import { ColorRing } from "react-loader-spinner";
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,10 +17,13 @@ function Login() {
   const router = useRouter();
   const emailValidation = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
   const handleSubmit = () => {
+    setDisableButton(true);
     if (username.length === 0) {
+      setDisableButton(false);
       setUsernameError("Email cannot be empty.");
       return;
     } else if (!emailValidation.test(username)) {
+      setDisableButton(false);
       setUsernameError("Please enter a valid email address.");
       return;
     } else {
@@ -27,6 +31,7 @@ function Login() {
     }
 
     if (password.length === 0) {
+      setDisableButton(false);
       setPasswordError("Password cannot empty.");
       return;
     } else {
@@ -42,20 +47,24 @@ function Login() {
     })
       .then(async (res) => {
         const response = await res.json();
-        setDisableButton(false);
         if (res.status === 200) {
           const expireTime = isTokenExpired(response.token);
           localStorage.setItem("authToken", response.token);
           localStorage.setItem("authTokenExpiration", expireTime.exp * 1000);
           setUserDetail({ email: username, password: password });
-          router.push("/movie");
+          setTimeout(() => {
+            router.push("/movie");
+            setDisableButton(false);
+          }, 3000);
         }
         if (res.status === 400 && response.message === "Invalid email!") {
+          setDisableButton(false);
           setUsernameError("Invalid email address.");
         } else {
           setUsernameError("");
         }
         if (res.status === 400 && response.message === "Invalid password!") {
+          setDisableButton(false);
           setPasswordError("Invalid password.");
         } else {
           setPasswordError("");
@@ -155,13 +164,32 @@ function Login() {
               )}
             </div>
           </div>
-          <div className="mt-5" onClick={() => handleSubmit()}>
+          <div className="mt-5">
             <button
+              onClick={() => handleSubmit()}
               type="submit"
               disabled={disableButton === true}
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Sign in
+              {disableButton ? (
+                <ColorRing
+                  visible={true}
+                  height="30"
+                  width="30"
+                  ariaLabel="blocks-loading"
+                  wrapperStyle={{}}
+                  wrapperClass="blocks-wrapper"
+                  colors={[
+                    "#e15b64",
+                    "#f47e60",
+                    "#f8b26a",
+                    "#abbd81",
+                    "#849b87",
+                  ]}
+                />
+              ) : (
+                <>Sign in</>
+              )}
             </button>
           </div>
         </div>
