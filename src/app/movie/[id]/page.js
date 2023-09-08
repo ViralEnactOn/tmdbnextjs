@@ -1,7 +1,7 @@
 "use client";
 
 import config from "@/app/config/config";
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import {
   ListBulletIcon,
@@ -9,9 +9,14 @@ import {
   BookmarkIcon,
   StarIcon,
   PlayIcon,
+  EllipsisVerticalIcon,
 } from "@heroicons/react/20/solid";
 import { ThreeCircles } from "react-loader-spinner";
 import Heading from "@/app/components/movie/Heading";
+import { Dialog, Menu, Popover, Transition } from "@headlessui/react";
+import CommentsSection from "../commentsSection";
+import RatingSection from "../ratingSection";
+import ShowRatings from "../showRatings";
 function page({ params }) {
   const [loader, setLoader] = useState(true);
   const [details, setDetails] = useState([]);
@@ -19,7 +24,11 @@ function page({ params }) {
   const [ratingType, setRatingType] = useState("");
   const [ratingNumber, setRatingNumber] = useState("");
   const [ratingData, setRatingData] = useState([]);
-
+  const [movieComment, setMovieComment] = useState("");
+  const [commentData, setCommentData] = useState([]);
+  const [showReplies, setShowReplies] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const handleMovieDetail = async () => {
     try {
       const response = await fetch(
@@ -41,6 +50,14 @@ function page({ params }) {
     } catch (error) {
       console.error("Error fetching watch list data:", error);
     }
+  };
+
+  const handleImageClick = (index) => {
+    setShowReplies((prevState) => {
+      const newState = [...prevState];
+      newState[index] = !newState[index];
+      return newState;
+    });
   };
 
   const handleFetchLike = async (id) => {
@@ -120,10 +137,10 @@ function page({ params }) {
     }
   };
 
-  const handleFetchRating = async (id) => {
+  const handleFetchComment = async (id) => {
     const authToken = localStorage.getItem("authToken");
     try {
-      const response = await fetch(`${config.app.base_url}/rating/fetch`, {
+      const response = await fetch(`${config.app.base_url}/comment/fetch`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -133,7 +150,7 @@ function page({ params }) {
 
       if (response.ok) {
         const data = await response.json();
-        setRatingData(data.rating);
+        setCommentData(data.comment);
       } else {
         console.error("Error fetching watch list data");
       }
@@ -160,6 +177,8 @@ function page({ params }) {
 
       if (response.ok) {
         const data = await response.json();
+        setRatingNumber("");
+        setRatingType("");
         handleFetchRating(id);
       } else {
         console.error("Error fetching watch list data");
@@ -169,42 +188,47 @@ function page({ params }) {
     }
   };
 
+  const openModal = () => {
+    setIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
   useEffect(() => {
     handleMovieDetail();
     handleFetchLike(params.id);
-    handleFetchRating(params.id);
+    handleFetchComment(params.id);
   }, []);
 
-  const projects = [
-    {
-      name: "Graph API",
-      initials: "GA",
-      href: "#",
-      members: 16,
-      bgColor: "bg-pink-600",
-    },
-    {
-      name: "Component Design",
-      initials: "CD",
-      href: "#",
-      members: 12,
-      bgColor: "bg-purple-600",
-    },
-    {
-      name: "Templates",
-      initials: "T",
-      href: "#",
-      members: 16,
-      bgColor: "bg-yellow-500",
-    },
-    {
-      name: "React Components",
-      initials: "RC",
-      href: "#",
-      members: 8,
-      bgColor: "bg-green-500",
-    },
-  ];
+  const handleInsertComment = async (id) => {
+    const authToken = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(`${config.app.base_url}/comment/insert`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: authToken,
+          movie_id: id,
+          comment: movieComment,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log({ data });
+        setMovieComment("");
+        // handleFetchRating(id);
+      } else {
+        console.error("Error fetching watch list data");
+      }
+    } catch (error) {
+      console.error("Error fetching watch list data:", error);
+    }
+  };
 
   return (
     <>
@@ -278,7 +302,7 @@ function page({ params }) {
                                   <span className="ml-3">{formattedTime}</span>
                                 </span>
                                 <span className="mt-5 flex items-center">
-                                  <div className="w-16 h-16 text-center">
+                                  <div className="w-16 h-16">
                                     <CircularProgressbar
                                       strokeWidth={6}
                                       value={
@@ -385,7 +409,7 @@ function page({ params }) {
                           </div>
                           <div className="flex justify-between">
                             {/* Like */}
-                            <div className="mx-auto ml-5 mt-5">
+                            <div className=" ml-5 mt-5">
                               <span className="flex justify-center items-center text-white text-base w-12 h-12 rounded-full font-semibold bg-blue-500">
                                 <HeartIcon
                                   className={`h-6 w-6  self-center ${
@@ -397,66 +421,274 @@ function page({ params }) {
                                 />
                               </span>
                             </div>
-                            {/* Rating */}
-                            <div>
+
+                            {/* Comment */}
+                            {/* <div>
                               <label
-                                htmlFor="location"
+                                htmlFor="comment"
                                 className="block text-sm font-medium leading-6 text-gray-900"
                               >
-                                Rating
+                                Add your comment
                               </label>
-                              <select
-                                value={ratingType}
-                                onChange={(e) => setRatingType(e.target.value)}
-                                id="location"
-                                name="location"
-                                className="mt-2 block w-30 rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                defaultValue="Canada"
-                              >
-                                <option>Plot</option>
-                                <option>Acting and Direction</option>
-                                <option>Visuals and Effects</option>
-                                <option>Writing and Dialog</option>
-                                <option>Sound and Music</option>
-                                <option>Pacing and Structure</option>
-                              </select>
-                              <select
-                                value={ratingNumber}
-                                onChange={(e) =>
-                                  setRatingNumber(e.target.value)
-                                }
-                                id="location"
-                                name="location"
-                                className="mt-2 block w-30 rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                defaultValue="Canada"
-                              >
-                                <option>0</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
-                                <option>5</option>
-                                <option>6</option>
-                                <option>7</option>
-                                <option>8</option>
-                                <option>9</option>
-                                <option>10</option>
-                              </select>
-                              <div className="mt-6 flex items-center  gap-x-6">
+                              <div className="mt-2">
+                                <textarea
+                                  value={movieComment}
+                                  onChange={(e) => {
+                                    setMovieComment(e.target.value);
+                                  }}
+                                  rows={4}
+                                  name="comment"
+                                  id="comment"
+                                  className="px-2 block w-40 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                  defaultValue={""}
+                                />
+                                <div className="mt-6 flex items-center gap-x-6">
+                                  <button
+                                    type="submit"
+                                    className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                                    onClick={() => {
+                                      handleInsertComment(item.id);
+                                    }}
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            </div> */}
+
+                            {/* Rating */}
+                            <div>
+                              <div className="mt-6 flex items-center gap-x-6">
                                 <button
                                   type="submit"
                                   className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                                  onClick={() => {
-                                    handleInsertRating(item.id);
-                                  }}
+                                  onClick={openModal}
                                 >
-                                  Save
+                                  Add Rating
                                 </button>
                               </div>
                             </div>
                           </div>
+
+                          {/* View Comment */}
+                          {/* <div>
+                            <h2 className="text-sm font-medium text-gray-500 mt-5">
+                              Comment
+                            </h2>
+                            <ul
+                              role="list"
+                              className="divide-y divide-gray-100"
+                            >
+                              {commentData.map((person, index) => (
+                                <li
+                                  key={person.email}
+                                  className="flex justify-between gap-x-6 py-5"
+                                >
+                                  <div className="flex min-w-0 gap-x-4">
+                                    <div className="min-w-0 flex-auto">
+                                      <p className="text-sm font-semibold leading-6 text-gray-900">
+                                        <a className="hover:underline">
+                                          {person.user_name}
+                                        </a>
+                                      </p>
+                                      <p className="mt-1 flex text-xs leading-5 text-gray-500">
+                                        <a className="truncate hover:underline">
+                                          {person.user_comment_text}
+                                        </a>
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {person.user_comment_parent_comment_id !==
+                                    null && (
+                                    <div>
+                                      <button
+                                        className="bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-md ml-5 mt-2 text-sm"
+                                        onClick={
+                                          (() => handleImageClick(index),
+                                          setShowReplies(!showReplies))
+                                        }
+                                      >
+                                        {showReplies
+                                          ? "Hide Replies"
+                                          : "Show Replies"}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {showReplies && (
+                                    <div className="flex min-w-0 gap-x-4">
+                                      <div className="min-w-0 flex-auto">
+                                        <p className="text-sm font-semibold leading-6 text-gray-900">
+                                          <a className="hover:underline">
+                                            {person.user_name}
+                                          </a>
+                                        </p>
+                                        <p className="mt-1 flex text-xs leading-5 text-gray-500">
+                                          <a className="truncate hover:underline">
+                                            {person.user_comment_text}
+                                          </a>
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="flex shrink-0 items-center gap-x-6">
+                                    <Menu
+                                      as="div"
+                                      className="relative flex-none"
+                                    >
+                                      <Menu.Button className="-m-2.5 block p-2.5 text-gray-500 hover:text-gray-900">
+                                        <span className="sr-only">
+                                          Open options
+                                        </span>
+                                        <EllipsisVerticalIcon
+                                          className="h-5 w-5"
+                                          aria-hidden="true"
+                                        />
+                                      </Menu.Button>
+                                      <Transition
+                                        as={Fragment}
+                                        enter="transition ease-out duration-100"
+                                        enterFrom="transform opacity-0 scale-95"
+                                        enterTo="transform opacity-100 scale-100"
+                                        leave="transition ease-in duration-75"
+                                        leaveFrom="transform opacity-100 scale-100"
+                                        leaveTo="transform opacity-0 scale-95"
+                                      >
+                                        <Menu.Items className="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                                          <Menu.Item>
+                                            {({ active }) => (
+                                              <a
+                                                href="#"
+                                                className={
+                                                  (active ? "bg-gray-50" : "",
+                                                  "block px-3 py-1 text-sm leading-6 text-gray-900")
+                                                }
+                                              >
+                                                Add Comment
+                                                <span className="sr-only">
+                                                  , {person.name}
+                                                </span>
+                                              </a>
+                                            )}
+                                          </Menu.Item>
+                                        </Menu.Items>
+                                      </Transition>
+                                    </Menu>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          </div> */}
+                          {/* <div>
+                            <h2 className="text-sm font-medium text-gray-500 mt-5">
+                              Comment
+                            </h2>
+                            <ul
+                              role="list"
+                              className="divide-y divide-gray-100"
+                            >
+                              {commentData.map((person, index) => (
+                                <li
+                                  key={person.email}
+                                  className="flex justify-between gap-x-6 py-5"
+                                >
+                                  <div className="flex min-w-0 gap-x-4">
+                                    <div className="min-w-0 flex-auto">
+                                      <p className="text-sm font-semibold leading-6 text-gray-900">
+                                        <a className="hover:underline">
+                                          {person.user_name}
+                                        </a>
+                                      </p>
+                                      <p className="mt-1 flex text-xs leading-5 text-gray-500">
+                                        <a className="truncate hover:underline">
+                                          {person.user_comment_text}
+                                        </a>
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {person.user_comment_parent_comment_id !==
+                                    null && (
+                                    <div>
+                                      <button
+                                        className="bg-gray-200 hover:bg-gray-300 px-4 py-1.5 rounded-md ml-5 mt-2 text-sm"
+                                        onClick={() => handleImageClick(index)}
+                                      >
+                                        {showReplies[index]
+                                          ? "Hide Replies"
+                                          : "Show Replies"}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {showReplies[index] && (
+                                    <div className="flex min-w-0 gap-x-4 ml-5">
+                                      <div className="min-w-0 flex-auto">
+                                        <p className="text-sm font-semibold leading-6 text-gray-900">
+                                          <a className="hover:underline">
+                                            {person.user_name}
+                                          </a>
+                                        </p>
+                                        <p className="mt-1 flex text-xs leading-5 text-gray-500">
+                                          <a className="truncate hover:underline">
+                                            {person.user_comment_text}
+                                          </a>
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="flex shrink-0 items-center gap-x-6">
+                                    <Menu
+                                      as="div"
+                                      className="relative flex-none"
+                                    >
+                                      <Menu.Button className="-m-2.5 block p-2.5 text-gray-500 hover:text-gray-900">
+                                        <span className="sr-only">
+                                          Open options
+                                        </span>
+                                        <EllipsisVerticalIcon
+                                          className="h-5 w-5"
+                                          aria-hidden="true"
+                                        />
+                                      </Menu.Button>
+                                      <Transition
+                                        as={Fragment}
+                                        enter="transition ease-out duration-100"
+                                        enterFrom="transform opacity-0 scale-95"
+                                        enterTo="transform opacity-100 scale-100"
+                                        leave="transition ease-in duration-75"
+                                        leaveFrom="transform opacity-100 scale-100"
+                                        leaveTo="transform opacity-0 scale-95"
+                                      >
+                                        <Menu.Items className="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                                          <Menu.Item>
+                                            {({ active }) => (
+                                              <a
+                                                href="#"
+                                                className={
+                                                  (active ? "bg-gray-50" : "",
+                                                  "block px-3 py-1 text-sm leading-6 text-gray-900")
+                                                }
+                                              >
+                                                Add Comment
+                                                <span className="sr-only">
+                                                  , {person.name}
+                                                </span>
+                                              </a>
+                                            )}
+                                          </Menu.Item>
+                                        </Menu.Items>
+                                      </Transition>
+                                    </Menu>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          </div> */}
+                          <CommentsSection movieId={params.id} />
+
                           {/* View Rating */}
-                          <div>
+                          <div className="mt-5">
+                            <ShowRatings movie_id={params.id} />
+                          </div>
+                          {/* <div>
                             <h2 className="text-sm font-medium text-gray-500">
                               Rating
                             </h2>
@@ -469,9 +701,6 @@ function page({ params }) {
                                   key={project.user_name}
                                   className="col-span-1 flex rounded-md shadow-sm"
                                 >
-                                  <div className="flex w-16 flex-shrink-0 items-center justify-center rounded-l-md text-sm font-medium text-white">
-                                    {/* {project.initials} */}
-                                  </div>
                                   <div className="flex flex-1 items-center justify-between truncate rounded-r-md border-b border-r border-t border-gray-200 bg-white">
                                     <div className="flex-1 truncate px-4 py-2 text-sm">
                                       <a className="font-medium text-gray-900 hover:text-gray-600">
@@ -489,7 +718,7 @@ function page({ params }) {
                                 </li>
                               ))}
                             </ul>
-                          </div>
+                          </div> */}
                         </>
                       );
                     })}
@@ -503,6 +732,39 @@ function page({ params }) {
             </div>
           </>
         )}
+        <Transition appear show={isOpen} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={closeModal}>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-black bg-opacity-25" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4 text-center">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 scale-95"
+                  enterTo="opacity-100 scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 scale-100"
+                  leaveTo="opacity-0 scale-95"
+                >
+                  <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                    <RatingSection movie_id={params.id} />
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
+            </div>
+          </Dialog>
+        </Transition>
       </main>
     </>
   );
