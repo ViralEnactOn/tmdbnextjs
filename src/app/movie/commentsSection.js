@@ -189,16 +189,25 @@ function CommentsSection({ movieId }) {
                           )}
                         </>
                       )}
-                      {item.user_comment_parent_comment_id !== null && (
-                        <>
-                          <div class="text-gray-300 font-bold pl-14">|</div>
-                          <div class="flex justify-between border ml-5  rounded-md">
+                      {comments
+                        .filter(
+                          (nestedItem) =>
+                            nestedItem.user_comment_parent_comment_id ===
+                            item.user_comment_id
+                        )
+                        .map((nestedItem, nestedIndex) => (
+                          <div
+                            key={nestedItem.user_comment_id}
+                            class="flex justify-between border ml-5 rounded-md"
+                          >
                             <div class="p-3">
                               <div class="flex gap-3 items-center">
-                                <h3 class="font-bold">{item.user_name}</h3>
+                                <h3 class="font-bold">
+                                  {nestedItem.user_name}
+                                </h3>
                               </div>
                               <p class="text-gray-600 mt-2">
-                                {item.user_comment_text}
+                                {nestedItem.user_comment_text}
                               </p>
                               <button
                                 class="text-right text-blue-500"
@@ -207,39 +216,38 @@ function CommentsSection({ movieId }) {
                                 Reply
                               </button>
                             </div>
+                            {nestedComment &&
+                              selectedNestedIndex === nestedIndex && (
+                                <div>
+                                  <div class="w-full px-3 mb-2 mt-6">
+                                    <textarea
+                                      class="bg-gray-100 rounded border border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-400 focus:outline-none focus:bg-white"
+                                      name="body"
+                                      placeholder="Comment"
+                                      value={nestedCommentValue}
+                                      onChange={(e) => {
+                                        setNestedCommentValue(e.target.value);
+                                      }}
+                                      required
+                                    ></textarea>
+                                  </div>
+                                  <div class="w-full flex justify-end px-3 my-3">
+                                    <input
+                                      type="submit"
+                                      onClick={() =>
+                                        handleSubmitNestedComment(
+                                          nestedItem.user_comment_id,
+                                          movieId
+                                        )
+                                      }
+                                      class="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
+                                      value="Post Comment"
+                                    />
+                                  </div>
+                                </div>
+                              )}
                           </div>
-                          {nestedComment && selectedNestedIndex === index && (
-                            <>
-                              <div class="w-full px-3 mb-2 mt-6">
-                                <textarea
-                                  class="bg-gray-100 rounded border border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-400 focus:outline-none focus:bg-white"
-                                  name="body"
-                                  placeholder="Comment"
-                                  value={nestedCommentValue}
-                                  onChange={(e) => {
-                                    setNestedCommentValue(e.target.value);
-                                  }}
-                                  required
-                                ></textarea>
-                              </div>
-
-                              <div class="w-full flex justify-end px-3 my-3">
-                                <input
-                                  type="submit"
-                                  onClick={() =>
-                                    handleSubmitNestedComment(
-                                      item.user_comment_id,
-                                      movieId
-                                    )
-                                  }
-                                  class="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
-                                  value="Post Comment"
-                                />
-                              </div>
-                            </>
-                          )}
-                        </>
-                      )}
+                        ))}
                     </>
                   );
                 })}
