@@ -413,23 +413,23 @@ function MainContainer() {
                                           leaveFrom="opacity-100 translate-y-0"
                                           leaveTo="opacity-0 translate-y-1"
                                         >
-                                          <Popover.Panel className="absolute left-1/2 z-10 mt-3 max-w-[300px] w-[300px] -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
+                                          <Popover.Panel className="absolute left-1/2 z-10 mt-3  -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
                                             <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
                                               {watchListData.map((data) => {
                                                 return (
-                                                  <div className="bg-gray-50 p-4">
-                                                    <button
-                                                      className="text-sm font-medium text-gray-900"
-                                                      onClick={() => {
-                                                        handleAddMovieWatchList(
-                                                          item.id,
-                                                          data.user_watch_list_id
-                                                        );
-                                                        setIsPopoverOpen(
-                                                          !isPopoverOpen
-                                                        );
-                                                      }}
-                                                    >
+                                                  <div
+                                                    className="bg-gray-50 p-4 max-w-[300px] w-[300px]"
+                                                    onClick={() => {
+                                                      handleAddMovieWatchList(
+                                                        item.id,
+                                                        data.user_watch_list_id
+                                                      );
+                                                      setIsPopoverOpen(
+                                                        !isPopoverOpen
+                                                      );
+                                                    }}
+                                                  >
+                                                    <button className="text-sm font-medium text-gray-900 ">
                                                       {
                                                         data.user_watch_list_name
                                                       }

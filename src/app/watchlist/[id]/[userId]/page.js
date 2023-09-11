@@ -240,7 +240,7 @@ function page({ params }) {
 
                 <div className="mt-5 flex justify-center myChart">
                   {chartData.length !== 0 && (
-                    <div className="h-52 w-52">
+                    <div className="h-[300px] w-[300px]">
                       <PieChart
                         datasets={chartData.datasets}
                         labels={chartData.label}
@@ -261,6 +261,7 @@ function page({ params }) {
                         <div
                           key={index}
                           className="rounded-lg border-solid border-2 flex sm:flex-col w-[calc(100vw-32px)] sm:w-[148px] s:h-25"
+                          onClick={() => router.push(`/movie/${item.id}`)}
                         >
                           <div className="relative rounded-t-lg s:hidden sm:block">
                             {lazyLoading === true ? (

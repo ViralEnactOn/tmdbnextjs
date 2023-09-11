@@ -73,7 +73,7 @@ function countryWiseMovieRevenue() {
       <br />
       <div className="row">
         <div className="col-md-1"></div>
-        <div className="col-md-10">
+        <div className="flex justify-center col-md-10 h-[500px] w-[500px]">
           {chartData.length !== 0 && (
             <PieChart datasets={chartData.datasets} labels={chartData.label} />
           )}
