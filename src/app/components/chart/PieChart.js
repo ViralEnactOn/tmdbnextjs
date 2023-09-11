@@ -1,21 +1,19 @@
 import React from "react";
 import { Pie } from "react-chartjs-2";
 
-function PieChart({ chartData, options }) {
+function PieChart({ datasets, labels }) {
   return (
-    <div className="h-52 w-52 myChart">
-      <Pie
-        data={chartData}
-        options={{
-          plugins: {
-            title: {
-              display: true,
-              text: "Watch list genre wise",
-            },
-          },
-        }}
-      />
-    </div>
+    <Pie
+      data={{
+        labels: labels,
+        datasets: datasets,
+      }}
+      options={{
+        plugins: {
+         
+        },
+      }}
+    />
   );
 }
 

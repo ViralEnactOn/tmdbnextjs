@@ -34,26 +34,31 @@ export default function RatingSection({ movie_id }) {
         rating: structureValue,
       },
     ];
-    try {
-      let response;
-      insertRecord.map(async (item) => {
-        response = await fetch(`${config.app.base_url}/rating/insert`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: authToken,
-            movie_id: movie_id,
-            type: item.type,
-            rating: item.rating,
-          }),
-        });
-      });
 
-      if (response) {
-        const data = await response.json();
-        alert(`${data.message}`);
+    try {
+      const responses = await Promise.all(
+        insertRecord.map(async (item) => {
+          return await fetch(`${config.app.base_url}/rating/insert`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              token: authToken,
+              movie_id: movie_id,
+              type: item.type,
+              rating: item.rating,
+            }),
+          });
+        })
+      );
+
+      const successResponses = responses.filter((response) => response.ok);
+      if (successResponses.length === insertRecord.length) {
+        const data = await Promise.all(
+          successResponses.map((response) => response.json())
+        );
+        alert("All ratings inserted successfully");
         setPlotValue(0);
         setActionValue(0);
         setVisualValue(0);
@@ -61,10 +66,10 @@ export default function RatingSection({ movie_id }) {
         setMusicValue(0);
         setStructureValue(0);
       } else {
-        console.error("Error fetching watch list data");
+        console.error("Error inserting ratings");
       }
     } catch (error) {
-      console.error("Error fetching watch list data:", error);
+      console.error("Error inserting ratings:", error);
     }
   };
 

@@ -3,15 +3,14 @@ import config from "../config/config";
 function CommentsSection({ movieId }) {
   // State to store replies for each comment
   const [comments, setComments] = useState([]);
-  const [rootComment, setRootComment] = useState(false);
   const [nestedComment, setNestedComment] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [selectedNestedIndex, setSelectedNestedIndex] = useState(-1);
   const [normalComment, setNormalComment] = useState("");
   const [nestedCommentValue, setNestedCommentValue] = useState("");
+  const [commentError, setCommentError] = useState("");
+  const [normalCommentError, setNormalCommentError] = useState("");
 
   useEffect(() => {
-    // Fetch comments for the movie based on movieId
     handleFetchComment(movieId);
   }, [movieId]);
 
@@ -37,15 +36,6 @@ function CommentsSection({ movieId }) {
     }
   };
 
-  const handleRootComment = (index) => {
-    setRootComment(!rootComment);
-    if (selectedIndex === index) {
-      setSelectedIndex(-1);
-    } else {
-      setSelectedIndex(index);
-    }
-  };
-
   const handleNestedComment = (index) => {
     setNestedComment(!nestedComment);
     if (selectedNestedIndex === index) {
@@ -56,6 +46,12 @@ function CommentsSection({ movieId }) {
   };
 
   const handleSubmitNestedComment = async (id, movie_id) => {
+    if (nestedCommentValue.length === 0) {
+      setCommentError("Comment cannot empty");
+      return;
+    } else {
+      setCommentError("");
+    }
     const authToken = localStorage.getItem("authToken");
     try {
       const response = await fetch(`${config.app.base_url}/comment/insert`, {
@@ -85,6 +81,12 @@ function CommentsSection({ movieId }) {
   };
 
   const handleSubmitNormalComment = async (movie_id) => {
+    if (normalCommentError.length === 0) {
+      setNormalCommentError("Comment cannot empty");
+      return;
+    } else {
+      setNormalCommentError("");
+    }
     const authToken = localStorage.getItem("authToken");
     try {
       const response = await fetch(`${config.app.base_url}/comment/insert`, {
@@ -112,173 +114,107 @@ function CommentsSection({ movieId }) {
     }
   };
 
-  // const handleCheck = () => {
-  //   if (comments.length !== 0) {
-  //     comments.map((item) => {
-  //       if (item.user_comment_parent_comment_id) {
-  //         comments.map((data) => {
-  //           if (item.user_comment_parent_comment_id === data.user_comment_id) {
-  //             console.log({ data });
-  //           }
-  //         });
-  //       }
-  //     });
-  //   }
-  // };
-  // handleCheck();
+  const renderComments = (comments, parentCommentId = null) => {
+    return (
+      <div>
+        {comments
+          .filter(
+            (comment) =>
+              comment.user_comment_parent_comment_id === parentCommentId
+          )
+          .map((comment, index) => (
+            <div
+              className="m-2.5 p-2.5 border-2 border-solid border-b-gray-300 rounded-lg"
+              key={comment.user_comment_id}
+            >
+              <div className="mb-2">
+                <p className="font-bold text-[#666]">{comment.user_name}</p>
+              </div>
+              <div className="comment-body">
+                <p className="text-[#666]">{comment.user_comment_text}</p>
+              </div>
+              <div class="w-full flex justify-start  my-3">
+                <input
+                  type="submit"
+                  class="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
+                  value="Reply"
+                  onClick={() => handleNestedComment(comment.user_comment_id)}
+                />
+              </div>
+              {nestedComment &&
+                selectedNestedIndex === comment.user_comment_id && (
+                  <div>
+                    <div className="w-full px-3 mb-2 mt-6">
+                      <textarea
+                        className="bg-gray-100 rounded border border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-400 focus:outline-none focus:bg-white"
+                        name="body"
+                        placeholder="Comment"
+                        value={nestedCommentValue}
+                        onChange={(e) => {
+                          setNestedCommentValue(e.target.value);
+                        }}
+                        required
+                      ></textarea>
+                      {commentError && (
+                        <div className="text-red-700 block text-sm font-medium leading-6">
+                          {commentError}
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-full flex justify-end px-3 my-3">
+                      <input
+                        type="submit"
+                        onClick={() =>
+                          handleSubmitNestedComment(
+                            comment.user_comment_id,
+                            movieId
+                          )
+                        }
+                        className="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
+                        value="Post Comment"
+                      />
+                    </div>
+                  </div>
+                )}
+              {renderComments(comments, comment.user_comment_id)}{" "}
+            </div>
+          ))}
+      </div>
+    );
+  };
 
   return (
     <>
-      <div class=" bg-white rounded-lg border p-1 md:p-3 m-10">
-        <h3 class="font-semibold p-1">Comments</h3>
-        <div class="flex flex-col gap-5 m-3">
-          <div>
-            {/* Root Comment */}
-            {comments && comments.length !== 0 && (
-              <>
-                {comments.map((item, index) => {
-                  return (
-                    <>
-                      {item.user_comment_parent_comment_id === null && (
-                        <>
-                          <div class="flex w-full justify-between border rounded-md my-5">
-                            <div class="p-3">
-                              <div class="flex gap-3 items-center">
-                                <h3 class="font-bold">{item.user_name}</h3>
-                              </div>
-                              <p class="text-gray-600 mt-2">
-                                {item.user_comment_text}
-                              </p>
-                              <button
-                                class="text-right text-blue-500"
-                                onClick={() => handleRootComment(index)}
-                              >
-                                Reply
-                              </button>
-                            </div>
-                          </div>
-                          {rootComment && selectedIndex === index && (
-                            <>
-                              <div class="w-full px-3 mb-2 mt-6">
-                                <textarea
-                                  class="bg-gray-100 rounded border border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-400 focus:outline-none focus:bg-white"
-                                  name="body"
-                                  placeholder="Comment"
-                                  value={nestedCommentValue}
-                                  onChange={(e) => {
-                                    setNestedCommentValue(e.target.value);
-                                  }}
-                                  required
-                                ></textarea>
-                              </div>
+      {comments.length !== 0 && <div>{renderComments(comments, null)}</div>}
 
-                              <div class="w-full flex justify-end px-3 my-3">
-                                <input
-                                  type="submit"
-                                  class="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
-                                  value="Post Comment"
-                                  onClick={() => {
-                                    handleSubmitNestedComment(
-                                      item.user_comment_id,
-                                      movieId
-                                    );
-                                  }}
-                                />
-                              </div>
-                            </>
-                          )}
-                        </>
-                      )}
-                      {comments
-                        .filter(
-                          (nestedItem) =>
-                            nestedItem.user_comment_parent_comment_id ===
-                            item.user_comment_id
-                        )
-                        .map((nestedItem, nestedIndex) => (
-                          <div
-                            key={nestedItem.user_comment_id}
-                            class="flex justify-between border ml-5 rounded-md"
-                          >
-                            <div class="p-3">
-                              <div class="flex gap-3 items-center">
-                                <h3 class="font-bold">
-                                  {nestedItem.user_name}
-                                </h3>
-                              </div>
-                              <p class="text-gray-600 mt-2">
-                                {nestedItem.user_comment_text}
-                              </p>
-                              <button
-                                class="text-right text-blue-500"
-                                onClick={() => handleNestedComment(index)}
-                              >
-                                Reply
-                              </button>
-                            </div>
-                            {nestedComment &&
-                              selectedNestedIndex === nestedIndex && (
-                                <div>
-                                  <div class="w-full px-3 mb-2 mt-6">
-                                    <textarea
-                                      class="bg-gray-100 rounded border border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-400 focus:outline-none focus:bg-white"
-                                      name="body"
-                                      placeholder="Comment"
-                                      value={nestedCommentValue}
-                                      onChange={(e) => {
-                                        setNestedCommentValue(e.target.value);
-                                      }}
-                                      required
-                                    ></textarea>
-                                  </div>
-                                  <div class="w-full flex justify-end px-3 my-3">
-                                    <input
-                                      type="submit"
-                                      onClick={() =>
-                                        handleSubmitNestedComment(
-                                          nestedItem.user_comment_id,
-                                          movieId
-                                        )
-                                      }
-                                      class="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
-                                      value="Post Comment"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                          </div>
-                        ))}
-                    </>
-                  );
-                })}
-              </>
-            )}
+      {/* Normal Comment */}
+      <div class="w-full px-3 mb-2 mt-6">
+        <textarea
+          class="bg-gray-100 rounded border border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-400 focus:outline-none focus:bg-white"
+          name="body"
+          placeholder="Comment"
+          value={normalComment}
+          onChange={(e) => {
+            setNormalComment(e.target.value);
+          }}
+          required
+        ></textarea>
+        {normalCommentError && (
+          <div className="text-red-700 block text-sm font-medium leading-6">
+            {normalCommentError}
           </div>
-        </div>
-        {/* Normal Comment */}
-        <div class="w-full px-3 mb-2 mt-6">
-          <textarea
-            class="bg-gray-100 rounded border border-gray-400 leading-normal resize-none w-full h-20 py-2 px-3 font-medium placeholder-gray-400 focus:outline-none focus:bg-white"
-            name="body"
-            placeholder="Comment"
-            value={normalComment}
-            onChange={(e) => {
-              setNormalComment(e.target.value);
-            }}
-            required
-          ></textarea>
-        </div>
+        )}
+      </div>
 
-        <div class="w-full flex justify-end px-3 my-3">
-          <input
-            type="submit"
-            class="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
-            value="Post Comment"
-            onClick={() => {
-              handleSubmitNormalComment(movieId);
-            }}
-          />
-        </div>
+      <div class="w-full flex justify-end px-3 my-3">
+        <input
+          type="submit"
+          class="px-2.5 py-1.5 rounded-md text-white text-sm bg-indigo-500 "
+          value="Post Comment"
+          onClick={() => {
+            handleSubmitNormalComment(movieId);
+          }}
+        />
       </div>
     </>
   );

@@ -6,10 +6,7 @@ import { ThreeCircles } from "react-loader-spinner";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { Popover, Transition, Dialog, Switch } from "@headlessui/react";
-import {
-  EllipsisHorizontalCircleIcon,
-  ClipboardDocumentCheckIcon,
-} from "@heroicons/react/20/solid";
+import { EllipsisHorizontalCircleIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
 import Heading from "@/app/components/movie/Heading";
 import PieChart from "@/app/components/chart/PieChart";
@@ -78,14 +75,24 @@ function page({ params }) {
               label: "Watch List",
               data: data.genreCountArray.map((item) => item.genre_count),
               backgroundColor: [
-                "rgba(75,192,192,1)",
-                "#f0331a",
-                "#f3ba2f",
-                "#ecf0f1",
-                "#2a71d0",
+                "rgba(255, 99, 132, 0.2)",
+                "rgba(255, 159, 64, 0.2)",
+                "rgba(255, 205, 86, 0.2)",
+                "rgba(75, 192, 192, 0.2)",
+                "rgba(54, 162, 235, 0.2)",
+                "rgba(153, 102, 255, 0.2)",
+                "rgba(201, 203, 207, 0.2)",
               ],
-              borderColor: "black",
-              borderWidth: 2,
+              borderColor: [
+                "rgb(255, 99, 132)",
+                "rgb(255, 159, 64)",
+                "rgb(255, 205, 86)",
+                "rgb(75, 192, 192)",
+                "rgb(54, 162, 235)",
+                "rgb(153, 102, 255)",
+                "rgb(201, 203, 207)",
+              ],
+              borderWidth: 1,
             },
           ],
         });
@@ -232,7 +239,14 @@ function page({ params }) {
                 </div>
 
                 <div className="mt-5 flex justify-center myChart">
-                  {chartData.length !== 0 && <PieChart chartData={chartData} />}
+                  {chartData.length !== 0 && (
+                    <div className="h-52 w-52">
+                      <PieChart
+                        datasets={chartData.datasets}
+                        labels={chartData.label}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="mx-auto relative grid gap-10 s:gap-4 md:gap-10 mt-10 font-poppins sm:pl-12 s:grid-flow-wrap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 ">
                   {movie.length !== 0 &&
