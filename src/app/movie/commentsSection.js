@@ -103,7 +103,6 @@ function CommentsSection({ movieId }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log({ data });
         setNormalComment("");
         await handleFetchComment(movieId);
       } else {

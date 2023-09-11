@@ -29,7 +29,6 @@ function countryWiseMovieRevenue() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log({ data });
         setChartData({
           label: data.county_revenue.map((item) => `Country : ${item.country}`),
           datasets: [

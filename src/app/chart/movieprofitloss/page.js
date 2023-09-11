@@ -25,7 +25,6 @@ function movieProfitLoss() {
       if (response.ok) {
         const data = await response.json();
         const newData = await data.revenue.slice(0, 50);
-        console.log({ data });
         setChartData({
           label: newData.map(
             (item) => `Movie : ${item.title} , Result :${item.result}`
