@@ -7,9 +7,21 @@ function Heading() {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState([]);
   const router = useRouter();
+
+  const handleCheckUser = () => {
+    const authToken = localStorage.getItem("authToken");
+    const authTokenExpiration = localStorage.getItem("authTokenExpiration");
+    const isLoggedIn =
+      authToken !== null && new Date().getTime() < authTokenExpiration;
+    if (isLoggedIn === true) {
+      return;
+    } else {
+      router.push("/");
+    }
+  };
   useEffect(() => {
     const authToken = localStorage.getItem("authToken");
-
+    handleCheckUser();
     async function fetchUserData() {
       try {
         const response = await fetch(`${config.app.base_url}/user/view`, {

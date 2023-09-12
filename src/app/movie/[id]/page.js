@@ -202,33 +202,6 @@ function page({ params }) {
     handleFetchComment(params.id);
   }, []);
 
-  const handleInsertComment = async (id) => {
-    const authToken = localStorage.getItem("authToken");
-    try {
-      const response = await fetch(`${config.app.base_url}/comment/insert`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: authToken,
-          movie_id: id,
-          comment: movieComment,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMovieComment("");
-        // handleFetchRating(id);
-      } else {
-        console.error("Error fetching watch list data");
-      }
-    } catch (error) {
-      console.error("Error fetching watch list data:", error);
-    }
-  };
-
   return (
     <>
       <main className="min-w-max flex justify-center font-poppins -">
@@ -270,7 +243,7 @@ function page({ params }) {
                               <img
                                 src={item.backdrop_path}
                                 alt="Movie Poster"
-                                className="ml-48 "
+                                className="ml-48  "
                               />
                               <div
                                 className="absolute inset-0 bg-black opacity-50"
@@ -287,7 +260,7 @@ function page({ params }) {
                                 <img
                                   src={item.poster_path}
                                   alt="Movie Poster"
-                                  className="rounded-lg"
+                                  className="rounded-lg mt-5"
                                 />
                               </div>
                               <div className="flex flex-col w-4/5 ml-10 items-start">
@@ -435,14 +408,12 @@ function page({ params }) {
                             </div>
                           </div>
 
-                         
                           <CommentsSection movieId={params.id} />
 
                           {/* View Rating */}
                           <div className="mt-5">
                             <ShowRatings movie_id={params.id} />
                           </div>
-                         
                         </>
                       );
                     })}
