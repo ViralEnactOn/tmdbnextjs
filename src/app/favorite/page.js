@@ -8,7 +8,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { Popover, Transition } from "@headlessui/react";
 import { EllipsisHorizontalCircleIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
-import Heading from "@/app/components/movie/Heading";
+import Heading from "@/app/components/Movie/Heading";
 import { useRouter } from "next/navigation";
 
 function favorite() {

@@ -9,26 +9,37 @@ import {
   BookmarkIcon,
   StarIcon,
   PlayIcon,
-  EllipsisVerticalIcon,
 } from "@heroicons/react/20/solid";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { ThreeCircles } from "react-loader-spinner";
 import Heading from "@/app/components/movie/Heading";
 import { Dialog, Menu, Popover, Transition } from "@headlessui/react";
 import CommentsSection from "../commentsSection";
 import RatingSection from "../ratingSection";
 import ShowRatings from "../showRatings";
+import useCustomHook from "../custom-hook";
+
 function page({ params }) {
   const [loader, setLoader] = useState(true);
   const [details, setDetails] = useState([]);
   const [selected, setSelected] = useState(false);
-  const [ratingType, setRatingType] = useState("");
-  const [ratingNumber, setRatingNumber] = useState("");
-  const [ratingData, setRatingData] = useState([]);
-  const [movieComment, setMovieComment] = useState("");
   const [commentData, setCommentData] = useState([]);
-  const [showReplies, setShowReplies] = useState([]);
-  const [selectedIndex, setSelectedIndex] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { getRandom2, test } = useCustomHook();
+
+  const notify = (message) =>
+    toast.error(`${message}`, {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
   const handleMovieDetail = async () => {
     try {
       const response = await fetch(
@@ -50,14 +61,6 @@ function page({ params }) {
     } catch (error) {
       console.error("Error fetching watch list data:", error);
     }
-  };
-
-  const handleImageClick = (index) => {
-    setShowReplies((prevState) => {
-      const newState = [...prevState];
-      newState[index] = !newState[index];
-      return newState;
-    });
   };
 
   const handleFetchLike = async (id) => {
@@ -106,6 +109,10 @@ function page({ params }) {
 
           setSelected(false);
         } else {
+          const data = await response.json();
+          if (data.message) {
+            notify(data.message);
+          }
           console.error("Error fetching watch list data");
         }
       } catch (error) {
@@ -129,6 +136,10 @@ function page({ params }) {
           const data = await response.json();
           setSelected(true);
         } else {
+          const data = await response.json();
+          if (data.message) {
+            notify(data.message);
+          }
           console.error("Error fetching watch list data");
         }
       } catch (error) {
@@ -159,35 +170,6 @@ function page({ params }) {
     }
   };
 
-  const handleInsertRating = async (id) => {
-    const authToken = localStorage.getItem("authToken");
-    try {
-      const response = await fetch(`${config.app.base_url}/rating/insert`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: authToken,
-          movie_id: id,
-          type: ratingType,
-          rating: ratingNumber,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRatingNumber("");
-        setRatingType("");
-        handleFetchRating(id);
-      } else {
-        console.error("Error fetching watch list data");
-      }
-    } catch (error) {
-      console.error("Error fetching watch list data:", error);
-    }
-  };
-
   const openModal = () => {
     setIsOpen(true);
   };
@@ -200,7 +182,19 @@ function page({ params }) {
     handleMovieDetail();
     handleFetchLike(params.id);
     handleFetchComment(params.id);
+    getRandom2();
   }, []);
+  console.log({ test });
+
+  const RenderCom = ({ icon }) => {
+    return (
+      <div className="mx-auto ml-5">
+        <span className="flex justify-center items-center text-white text-base w-12 h-12 rounded-full font-semibold bg-blue-500">
+          {icon}
+        </span>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -217,6 +211,9 @@ function page({ params }) {
           </div>
         ) : (
           <>
+            <div>
+              <ToastContainer />
+            </div>
             <div className="container">
               <Heading />
               {details.length !== 0 ? (

@@ -1,6 +1,6 @@
 "use client";
-import LineChart from "@/app/components/chart/LineChart";
-import Heading from "@/app/components/movie/Heading";
+import LineChart from "@/app/components/Chart/LineChart";
+import Heading from "@/app/components/Movie/Heading";
 import config from "@/app/config/config";
 import { CategoryScale } from "chart.js";
 import Chart from "chart.js/auto";

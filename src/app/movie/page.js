@@ -1,9 +1,9 @@
 import React from "react";
-import Sort from "../components/movie/Sort";
-import WhereToWatch from "../components/movie/WhereToWatch";
-import Filters from "../components/movie/Filters";
-import MainContainer from "../components/movie/MainContainer";
-import Heading from "../components/movie/Heading";
+import Sort from "../components/Movie/Sort";
+import WhereToWatch from "../components/Movie/WhereToWatch";
+import Filters from "../components/Movie/Filters";
+import MainContainer from "../components/Movie/MainContainer";
+import Heading from "../components/Movie/Heading";
 
 export default function page() {
   return (

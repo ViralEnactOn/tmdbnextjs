@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Heading from "../components/movie/Heading";
+import Heading from "../components/Movie/Heading";
 import { useRouter } from "next/navigation";
 import { ThreeCircles } from "react-loader-spinner";
 

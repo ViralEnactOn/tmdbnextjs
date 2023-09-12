@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import config from "../config/config";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function CommentsSection({ movieId }) {
-  // State to store replies for each comment
   const [comments, setComments] = useState([]);
   const [nestedComment, setNestedComment] = useState(false);
   const [selectedNestedIndex, setSelectedNestedIndex] = useState(-1);
@@ -9,6 +10,17 @@ function CommentsSection({ movieId }) {
   const [nestedCommentValue, setNestedCommentValue] = useState("");
   const [commentError, setCommentError] = useState("");
   const [normalCommentError, setNormalCommentError] = useState("");
+  const notify = (message) =>
+    toast.error(`${message}`, {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
 
   useEffect(() => {
     handleFetchComment(movieId);
@@ -73,43 +85,50 @@ function CommentsSection({ movieId }) {
         setNestedCommentValue("");
         setSelectedNestedIndex(-1);
       } else {
+        const data = await response.json();
+        if (data.message) {
+          notify(data.message);
+        }
         console.error("Error fetching watch list data");
       }
     } catch (error) {
       console.error("Error fetching watch list data:", error);
     }
   };
-
   const handleSubmitNormalComment = async (movie_id) => {
-    if (normalCommentError.length === 0) {
+    if (normalComment.length === 0) {
       setNormalCommentError("Comment cannot empty");
       return;
     } else {
       setNormalCommentError("");
-    }
-    const authToken = localStorage.getItem("authToken");
-    try {
-      const response = await fetch(`${config.app.base_url}/comment/insert`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: authToken,
-          movie_id: movie_id,
-          comment: normalComment,
-        }),
-      });
+      const authToken = localStorage.getItem("authToken");
+      try {
+        const response = await fetch(`${config.app.base_url}/comment/insert`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: authToken,
+            movie_id: movie_id,
+            comment: normalComment,
+          }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setNormalComment("");
-        await handleFetchComment(movieId);
-      } else {
-        console.error("Error fetching watch list data");
+        if (response.ok) {
+          const data = await response.json();
+          setNormalComment("");
+          await handleFetchComment(movieId);
+        } else {
+          const data = await response.json();
+          if (data.message) {
+            notify(data.message);
+          }
+          console.error("Error fetching watch list data");
+        }
+      } catch (error) {
+        console.error("Error fetching watch list data:", error);
       }
-    } catch (error) {
-      console.error("Error fetching watch list data:", error);
     }
   };
 
@@ -185,7 +204,9 @@ function CommentsSection({ movieId }) {
   return (
     <>
       {comments.length !== 0 && <div>{renderComments(comments, null)}</div>}
-
+      <div>
+        <ToastContainer />
+      </div>
       {/* Normal Comment */}
       <div class="w-full px-3 mb-2 mt-6">
         <textarea

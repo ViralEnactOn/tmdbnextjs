@@ -5,7 +5,7 @@ import {
   PencilSquareIcon,
   CheckCircleIcon,
 } from "@heroicons/react/20/solid";
-import Heading from "../components/movie/Heading";
+import Heading from "../components/Movie/Heading";
 import config from "../config/config";
 import { Dialog, Transition } from "@headlessui/react";
 import { useRouter } from "next/navigation";

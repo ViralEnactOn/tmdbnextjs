@@ -8,8 +8,8 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { Popover, Transition, Dialog, Switch } from "@headlessui/react";
 import { EllipsisHorizontalCircleIcon } from "@heroicons/react/20/solid";
 import config from "@/app/config/config";
-import Heading from "@/app/components/movie/Heading";
-import PieChart from "@/app/components/chart/PieChart";
+import Heading from "@/app/components/Movie/Heading";
+import PieChart from "@/app/components/Chart/PieChart";
 import { CategoryScale } from "chart.js";
 import Chart from "chart.js/auto";
 import { useRouter } from "next/navigation";
@@ -153,7 +153,7 @@ function page({ params }) {
         const data = await response.json();
         setSelectedIndex(-1);
         await fetchDetailWatchList();
-      await fetchChartDetails();
+        await fetchChartDetails();
         alert(`${data.message}`);
       } else {
         console.error("Error fetching watch list data");

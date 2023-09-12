@@ -1,6 +1,6 @@
 "use client";
-import BarChart from "@/app/components/chart/BarChart";
-import Heading from "@/app/components/movie/Heading";
+import BarChart from "@/app/components/Chart/BarChart";
+import Heading from "@/app/components/Movie/Heading";
 import config from "@/app/config/config";
 import { CategoryScale } from "chart.js";
 import Chart from "chart.js/auto";
