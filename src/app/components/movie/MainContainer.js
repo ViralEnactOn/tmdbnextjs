@@ -186,7 +186,6 @@ function MainContainer() {
 
       if (response.ok) {
         const data = await response.json();
-        setSelectedIndex(-1);
         alert(`${data.message}`);
       } else {
         console.error("Error fetching watch list data");
@@ -355,7 +354,12 @@ function MainContainer() {
                         <div
                           key={index}
                           className="rounded-lg border-solid border-2 flex sm:flex-col w-[calc(100vw-32px)] sm:w-[148px] s:h-25"
-                          onClick={() => router.push(`/movie/${item.id}`)}
+                          onClick={() => {
+                            if (selectedIndex !== -1) {
+                              return;
+                            }
+                            router.push(`/movie/${item.id}`);
+                          }}
                         >
                           <div className="relative rounded-t-lg s:hidden sm:block">
                             {lazyLoading === true ? (

@@ -4,14 +4,13 @@ import WhereToWatch from "../components/movie/WhereToWatch";
 import Filters from "../components/movie/Filters";
 import MainContainer from "../components/movie/MainContainer";
 import Heading from "../components/movie/Heading";
-import HeadingHOC from "../components/HOC/HeadingHOC";
 
 export default function page() {
   return (
     <>
       <main className="min-w-max flex justify-center bg-#000 font-sans flex-shrink-0">
         <div className="container ">
-          <HeadingHOC />
+          <Heading />
           <div className="grid grid-cols-12 mt-10">
             {/* Sidebar */}
             <div className="col-span-12  sm:col-span-3 xs:col-span-12">

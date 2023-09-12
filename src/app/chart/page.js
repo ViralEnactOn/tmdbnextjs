@@ -39,7 +39,7 @@ function chart() {
                   className=" inline-flex items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                   onClick={() => router.push("/chart/movieprofitloss")}
                 >
-                  Movie Released Chart
+                  Movie Revenue Chart
                 </button>
               </div>
               <div className=" flex flex-col-reverse justify-stretch space-y-4 space-y-reverse sm:flex-row-reverse sm:justify-start sm:space-x-3 sm:space-y-0 sm:space-x-reverse md:mt-5 md:flex-row md:space-x-3 ">
